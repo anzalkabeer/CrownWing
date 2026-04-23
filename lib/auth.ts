@@ -1,7 +1,10 @@
 import jwt from 'jsonwebtoken';
 
-// In a real app, this should be in .env.local
-const JWT_SECRET = process.env.JWT_SECRET || 'crownwing_super_secret_key_2026';
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error("Missing JWT_SECRET environment variable. This is required for secure authentication.");
+}
 
 export interface TokenPayload {
   userId: string;
