@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lumière Interiors - Cart</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@300;400;700&amp;family=Manrope:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-high": "#262b27",
+                    "background": "#101511",
+                    "outline": "#8d928c",
+                    "primary-fixed-dim": "#b4cdb8",
+                    "tertiary-fixed-dim": "#e9c349",
+                    "on-tertiary": "#3c2f00",
+                    "on-surface-variant": "#c3c8c1",
+                    "on-secondary": "#1e3527",
+                    "on-secondary-fixed": "#092013",
+                    "on-primary-fixed": "#0b2013",
+                    "primary-fixed": "#d0e9d4",
+                    "secondary-fixed": "#cee9d4",
+                    "on-error": "#690005",
+                    "primary-container": "#1b3022",
+                    "error-container": "#93000a",
+                    "on-tertiary-container": "#4e3d00",
+                    "error": "#ffb4ab",
+                    "surface-container-low": "#181d19",
+                    "surface-container-lowest": "#0a0f0b",
+                    "surface-dim": "#101511",
+                    "surface-bright": "#353a36",
+                    "on-background": "#dfe4dd",
+                    "on-secondary-fixed-variant": "#354c3d",
+                    "on-primary-container": "#819986",
+                    "outline-variant": "#434843",
+                    "inverse-on-surface": "#2c322d",
+                    "on-primary-fixed-variant": "#364c3c",
+                    "secondary-fixed-dim": "#b3cdb9",
+                    "primary": "#b4cdb8",
+                    "surface-tint": "#b4cdb8",
+                    "tertiary-container": "#cba72f",
+                    "on-secondary-container": "#a5bfab",
+                    "secondary-container": "#374e3f",
+                    "secondary": "#b3cdb9",
+                    "on-primary": "#203527",
+                    "surface-container-highest": "#313631",
+                    "inverse-surface": "#dfe4dd",
+                    "tertiary-fixed": "#ffe088",
+                    "on-tertiary-fixed": "#241a00",
+                    "on-surface": "#dfe4dd",
+                    "on-tertiary-fixed-variant": "#574500",
+                    "surface-variant": "#313631",
+                    "on-error-container": "#ffdad6",
+                    "surface": "#101511",
+                    "tertiary": "#e9c349",
+                    "inverse-primary": "#4d6453",
+                    "surface-container": "#1c211c"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {},
+            "fontFamily": {
+                    "headline": [
+                            "Noto Serif"
+                    ],
+                    "body": [
+                            "Manrope"
+                    ],
+                    "label": [
+                            "Manrope"
+                    ]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { background-color: #101511; color: #dfe4dd; }
+        .glass-panel {
+            background-color: rgba(38, 43, 39, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .glow-gold {
+            box-shadow: 0 0 32px 0 rgba(233, 195, 73, 0.05);
+        }
+        .glow-gold-hover:hover {
+            box-shadow: 0 0 40px 0 rgba(233, 195, 73, 0.15);
+        }
+        .ambient-shadow {
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body class="font-body text-on-surface bg-surface antialiased min-h-screen flex flex-col pt-32">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-[#101511]/80 backdrop-blur-3xl flex justify-between items-center px-6 md:px-12 h-24 transition-transform duration-500 shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
+<div class="font-headline text-2xl md:text-3xl font-light tracking-tighter text-[#E9C349]">Lumière Interiors</div>
+<div class="hidden md:flex gap-8 items-center">
+<a class="font-headline text-lg tracking-wide text-[#B4CDB8]/60 hover:text-[#E9C349] transition-colors duration-700 ease-out scale-100 active:scale-98" href="#">Collection</a>
+<a class="font-headline text-lg tracking-wide text-[#B4CDB8]/60 hover:text-[#E9C349] transition-colors duration-700 ease-out scale-100 active:scale-98" href="#">Bespoke</a>
+<a class="font-headline text-lg tracking-wide text-[#B4CDB8]/60 hover:text-[#E9C349] transition-colors duration-700 ease-out scale-100 active:scale-98" href="#">Heritage</a>
+<a class="font-headline text-lg tracking-wide text-[#B4CDB8]/60 hover:text-[#E9C349] transition-colors duration-700 ease-out scale-100 active:scale-98" href="#">Showrooms</a>
+</div>
+<div class="flex gap-6 items-center">
+<button class="text-[#E9C349] hover:text-[#E9C349] transition-colors duration-700 ease-out">
+<span class="material-symbols-outlined text-2xl" data-icon="shopping_bag">shopping_bag</span>
+</button>
+<button class="text-[#B4CDB8]/60 hover:text-[#E9C349] transition-colors duration-700 ease-out">
+<span class="material-symbols-outlined text-2xl" data-icon="person">person</span>
+</button>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-grow max-w-7xl mx-auto w-full px-6 md:px-12 pb-32">
+<header class="mb-16 md:mb-24 mt-8">
+<h1 class="font-headline text-4xl md:text-6xl text-on-surface mb-4 tracking-tight">Your Selection</h1>
+<p class="font-body text-on-surface-variant text-lg">Curated pieces ready to transform your space.</p>
+</header>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24 relative">
+<!-- Cart Items -->
+<div class="lg:col-span-7 flex flex-col gap-8">
+<!-- Item 1 -->
+<div class="flex flex-col sm:flex-row gap-6 p-6 bg-surface-container-low rounded-DEFAULT ambient-shadow group relative overflow-hidden transition-all duration-500 hover:bg-surface-container">
+<div class="w-full sm:w-48 aspect-square flex-shrink-0 bg-surface-container-lowest rounded-sm overflow-hidden relative">
+<img alt="Velvet Armchair" class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-in-out" data-alt="Dark green velvet armchair with brass legs in a moody, low-lit room with dramatic shadows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyuiIqdk7-mAVztNX2DXf7foN2HvIYdkq9N3TyvQyz0N51MgtqLsJiKs2qPc8XjBQbXedcUh14cMo0QBGx4wjbgPRuxW62PgbI5-NwvM6fyJdBI1TQRkfpS-4Ro7j6hzPw28aZM9OeBThOcnFdJZO2t93IJM3JcS4zqbAD79CxPwMrXF5MHMWlsRFP0BEs6SIxX3wPice7XAr_I19cazPhZz0lj3SVIJbmQHcH3gUYiKgRjzf8P48Va1FY04Pj2V440oc_88JvCo0X"/>
+</div>
+<div class="flex flex-col justify-between flex-grow py-2">
+<div>
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-body text-xl font-medium text-on-surface">The Emerald Lounge Chair</h3>
+<button class="text-outline hover:text-tertiary transition-colors duration-300">
+<span class="material-symbols-outlined text-xl" data-icon="close">close</span>
+</button>
+</div>
+<p class="font-body text-sm text-on-surface-variant mb-4">Bespoke Collection · Forest Green Velvet</p>
+</div>
+<div class="flex justify-between items-end">
+<div class="flex items-center gap-4 bg-surface-container-lowest px-3 py-1 rounded-sm border border-outline-variant/30">
+<button class="text-on-surface-variant hover:text-tertiary transition-colors"><span class="material-symbols-outlined text-sm" data-icon="remove">remove</span></button>
+<span class="font-body text-sm w-4 text-center">1</span>
+<button class="text-on-surface-variant hover:text-tertiary transition-colors"><span class="material-symbols-outlined text-sm" data-icon="add">add</span></button>
+</div>
+<span class="font-headline text-2xl text-tertiary">$3,200</span>
+</div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex flex-col sm:flex-row gap-6 p-6 bg-surface-container-low rounded-DEFAULT ambient-shadow group relative overflow-hidden transition-all duration-500 hover:bg-surface-container">
+<div class="w-full sm:w-48 aspect-square flex-shrink-0 bg-surface-container-lowest rounded-sm overflow-hidden relative">
+<img alt="Brass Table Lamp" class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-in-out" data-alt="Minimalist brass table lamp casting a warm golden glow on a dark marble surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDUIzd4O-If18IfHW30VrVJ3CO4tSPALJM-t9z79TUUsOKsyi6Uy-EITAosXop01C68YZFnU6CIq66MGimyiHccUkiDh0atpQcot6OS9azEuGXKkTxRG3Lb_XfWnqr-QN_1zGPc8djrBc3x81DCpvq0aGh6QJOvk6cylqelWofVMz_hbG1eSsUtl6yyuP_6Lbrose5qltk9US_8AEUq12JC6t9WlvUs4BOByDRGssD7rJEK-mLfmskJdJbO-Rl3z2csmoa2ldpYbNO"/>
+</div>
+<div class="flex flex-col justify-between flex-grow py-2">
+<div>
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-body text-xl font-medium text-on-surface">Aura Brass Table Lamp</h3>
+<button class="text-outline hover:text-tertiary transition-colors duration-300">
+<span class="material-symbols-outlined text-xl" data-icon="close">close</span>
+</button>
+</div>
+<p class="font-body text-sm text-on-surface-variant mb-4">Heritage Line · Antique Brass</p>
+</div>
+<div class="flex justify-between items-end">
+<div class="flex items-center gap-4 bg-surface-container-lowest px-3 py-1 rounded-sm border border-outline-variant/30">
+<button class="text-on-surface-variant hover:text-tertiary transition-colors"><span class="material-symbols-outlined text-sm" data-icon="remove">remove</span></button>
+<span class="font-body text-sm w-4 text-center">2</span>
+<button class="text-on-surface-variant hover:text-tertiary transition-colors"><span class="material-symbols-outlined text-sm" data-icon="add">add</span></button>
+</div>
+<span class="font-headline text-2xl text-tertiary">$850</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Checkout Summary Sticky -->
+<div class="lg:col-span-5">
+<div class="sticky top-32 glass-panel p-8 rounded-lg border border-tertiary/20 glow-gold">
+<h2 class="font-headline text-2xl text-tertiary mb-8">Summary</h2>
+<div class="space-y-4 mb-8 font-body text-sm">
+<div class="flex justify-between text-on-surface-variant">
+<span>Subtotal</span>
+<span>$4,900</span>
+</div>
+<div class="flex justify-between text-on-surface-variant">
+<span>Shipping</span>
+<span>Complimentary White Glove</span>
+</div>
+<div class="h-px w-full bg-gradient-to-r from-transparent via-outline-variant/50 to-transparent my-4"></div>
+<div class="flex justify-between items-end">
+<span class="text-base text-on-surface">Estimated Total</span>
+<span class="font-headline text-3xl text-tertiary">$4,900</span>
+</div>
+</div>
+<!-- Gift Options -->
+<div class="mb-8">
+<label class="flex items-start gap-3 cursor-pointer group">
+<div class="relative flex items-center justify-center mt-1">
+<input class="peer sr-only" type="checkbox"/>
+<div class="w-5 h-5 border border-outline-variant rounded-sm bg-surface-container-lowest peer-checked:bg-tertiary peer-checked:border-tertiary transition-colors"></div>
+<span class="material-symbols-outlined text-on-tertiary text-sm absolute opacity-0 peer-checked:opacity-100 transition-opacity" data-icon="check">check</span>
+</div>
+<div>
+<span class="font-body text-sm text-on-surface group-hover:text-tertiary transition-colors">Add a gift message</span>
+<p class="font-body text-xs text-on-surface-variant mt-1">Include a handwritten note on artisan paper.</p>
+</div>
+</label>
+</div>
+<!-- Checkout Button -->
+<button class="w-full bg-tertiary text-on-tertiary font-body font-medium tracking-wide py-4 rounded-DEFAULT flex items-center justify-center gap-2 glow-gold-hover transition-all duration-500 relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-r from-tertiary-container/0 via-tertiary-container/30 to-tertiary-container/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out"></div>
+<span>Proceed to Checkout</span>
+<span class="material-symbols-outlined text-xl" data-icon="arrow_right_alt">arrow_right_alt</span>
+</button>
+<div class="mt-6 flex items-center justify-center gap-2 text-on-surface-variant/60 font-body text-xs">
+<span class="material-symbols-outlined text-sm" data-icon="lock">lock</span>
+<span>Secure Checkout</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full py-20 px-12 bg-[#101511] mt-auto relative z-10">
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-low to-transparent opacity-50 pointer-events-none"></div>
+<div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 relative">
+<div class="col-span-1 md:col-span-4 mb-4">
+<div class="font-headline text-xl text-[#E9C349]">Lumière Interiors</div>
+</div>
+<div class="flex flex-col gap-4">
+<a class="font-body text-sm tracking-[0.1em] uppercase text-[#B4CDB8]/40 hover:text-[#E9C349] duration-500 ease-in-out" href="#">Sustainability</a>
+</div>
+<div class="flex flex-col gap-4">
+<a class="font-body text-sm tracking-[0.1em] uppercase text-[#B4CDB8]/40 hover:text-[#E9C349] duration-500 ease-in-out" href="#">Private Viewings</a>
+</div>
+<div class="flex flex-col gap-4">
+<a class="font-body text-sm tracking-[0.1em] uppercase text-[#B4CDB8]/40 hover:text-[#E9C349] duration-500 ease-in-out" href="#">Shipping</a>
+</div>
+<div class="flex flex-col gap-4">
+<a class="font-body text-sm tracking-[0.1em] uppercase text-[#B4CDB8]/40 hover:text-[#E9C349] duration-500 ease-in-out" href="#">Terms</a>
+</div>
+<div class="col-span-1 md:col-span-4 mt-8 pt-8 border-t border-outline-variant/10">
+<p class="font-body text-sm text-[#B4CDB8]/40 tracking-wider">© 2024 Lumière Interiors. Crafted in Silence.</p>
+</div>
+</div>
+</footer>
+</body></html>
