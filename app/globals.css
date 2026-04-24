@@ -30,7 +30,7 @@
 
 html, body {
   min-height: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
   scroll-behavior: smooth;
 }
 
@@ -60,54 +60,121 @@ body {
   color: var(--background);
 }
 
-/* ===== Scroll-Synced Video Hero ===== */
-.hero-container {
+/* ============================================================
+   HERO CANVAS — Scroll-Driven Image Sequence
+   ============================================================ */
+
+/* Scroll runway — just provides height for the scroll distance */
+.hero-canvas-container {
   position: relative;
-  height: 300vh;
-  margin-bottom: 0;
+  background: transparent;
+  pointer-events: none;
 }
 
-.sticky-wrapper {
-  position: sticky;
+/* Fixed canvas layer — pinned to viewport, immune to parent overflow */
+.hero-canvas-fixed {
+  position: fixed;
   top: 0;
+  left: 0;
+  width: 100vw;
   height: 100vh;
-  overflow: hidden;
+  z-index: 1;
+  background: #050505;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
 }
 
-.video {
+.hero-canvas {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
   z-index: 1;
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
-  will-change: transform;
-  opacity: 0.98;
+  will-change: contents;
 }
 
-.video-hero-overlay {
-  position: absolute;
-  z-index: 2;
-  color: white;
-  top: 30%;
-  left: 10%;
-}
-
-.video-hero-overlay h1 {
-  font-family: var(--font-display), serif;
-  font-size: clamp(2rem, 5vw, 4.5rem);
-  line-height: 1.1;
-  text-shadow: 0 6px 30px rgba(0, 0, 0, 0.4);
-}
-
-.video-fallback {
+/* Radial vignette for seamless edge blending */
+.hero-canvas-vignette {
   position: absolute;
   inset: 0;
-  background-size: cover;
-  background-position: center;
-  z-index: 0;
+  z-index: 2;
   pointer-events: none;
+  background: radial-gradient(
+    ellipse 80% 80% at 50% 50%,
+    transparent 50%,
+    rgba(5, 5, 5, 0.4) 80%,
+    rgba(5, 5, 5, 0.85) 100%
+  );
+}
+
+/* ── Loading indicator ──────────────────────────────────────── */
+.hero-canvas-loader {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: #050505;
+}
+
+.hero-canvas-loader-bar {
+  width: 200px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.hero-canvas-loader-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-gold, #c9a45c), #e8c97a);
+  border-radius: 2px;
+  transition: width 0.2s ease-out;
+}
+
+.hero-canvas-loader-text {
+  font-family: var(--font-body, "Manrope", sans-serif);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* ── Overlay content ────────────────────────────────────────── */
+.hero-canvas-overlay {
+  position: absolute;
+  z-index: 3;
+  bottom: 12%;
+  left: 8%;
+  max-width: 600px;
+  transition: opacity 0.8s ease;
+}
+
+.hero-canvas-heading {
+  font-family: var(--font-display, "Noto Serif"), serif;
+  font-size: clamp(2.2rem, 5vw, 4.5rem);
+  font-weight: 500;
+  line-height: 1.08;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0 0 16px 0;
+  text-shadow: 0 4px 40px rgba(0, 0, 0, 0.5);
+  letter-spacing: -0.02em;
+}
+
+.hero-canvas-sub {
+  font-family: var(--font-body, "Manrope"), sans-serif;
+  font-size: clamp(0.85rem, 1.2vw, 1rem);
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 0;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 /* ============================================================
