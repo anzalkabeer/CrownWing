@@ -61,7 +61,7 @@ body {
 }
 
 /* ============================================================
-   HERO CANVAS — Scroll-Driven Image Sequence
+   HERO — Scroll-Driven Video / Canvas
    ============================================================ */
 
 /* Scroll runway — just provides height for the scroll distance */
@@ -71,7 +71,7 @@ body {
   pointer-events: none;
 }
 
-/* Fixed canvas layer — pinned to viewport, immune to parent overflow */
+/* Fixed layer — pinned to viewport, immune to parent overflow */
 .hero-canvas-fixed {
   position: fixed;
   top: 0;
@@ -84,6 +84,20 @@ body {
   pointer-events: none;
 }
 
+/* Scroll-driven video element */
+.hero-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+/* Legacy canvas element (kept for compatibility) */
 .hero-canvas {
   position: absolute;
   top: 0;
@@ -136,6 +150,17 @@ body {
   background: linear-gradient(90deg, var(--accent-gold, #c9a45c), #e8c97a);
   border-radius: 2px;
   transition: width 0.2s ease-out;
+}
+
+/* Indeterminate loader for video preload (no percentage available) */
+.hero-canvas-loader-fill--indeterminate {
+  width: 40% !important;
+  animation: indeterminateSlide 1.4s ease-in-out infinite;
+}
+
+@keyframes indeterminateSlide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
 }
 
 .hero-canvas-loader-text {
