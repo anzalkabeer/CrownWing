@@ -1,82 +1,67 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
-export function SplashScreen() {
-  const [show, setShow] = useState(true);
+export default function SplashScreen() {
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    // Show splash screen for 2.5 seconds to build anticipation
-    const timer = setTimeout(() => {
-      setShow(false);
-    }, 2500);
+    if (typeof window === "undefined") return;
+    if (sessionStorage.getItem("cw-splash-shown")) return;
+
+    setVisible(true);
+    sessionStorage.setItem("cw-splash-shown", "1");
+
+    const timer = setTimeout(() => setVisible(false), 2500);
     return () => clearTimeout(timer);
   }, []);
 
   return (
     <AnimatePresence>
-      {show && (
+      {visible && (
         <motion.div
           key="splash"
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 1, ease: "easeInOut" }}
-          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#0a0f0b] overflow-hidden"
+          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center"
+          style={{
+            background:
+              "radial-gradient(ellipse 70% 60% at 50% 45%, #0d2847 0%, #06080f 100%)",
+          }}
         >
-          {/* Background Textures */}
-          <div className="absolute inset-0 z-0">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#062c1e_0%,_#090f0c_50%,_#0f1512_100%)] opacity-80" />
-            <div
-              className="absolute inset-0 opacity-[0.03] pointer-events-none"
-              style={{ backgroundImage: "url('/noise.svg')" }}
-            />
-          </div>
+          {/* Pulsing glow behind logo */}
+          <div className="absolute w-48 h-48 rounded-full bg-[#c9a45c]/20 animate-pulse-glow" />
 
-          {/* Ambient Golden Glow behind Logo */}
-          <div className="absolute z-10 w-96 h-96 rounded-full bg-[#d6b05e] opacity-40 blur-[80px] animate-pulse-glow" style={{ boxShadow: "0 0 120px rgba(233, 193, 118, 0.3)" }} />
-
-          {/* Central Branding Element */}
-          <div className="relative z-20 flex flex-col items-center gap-2 animate-breath">
-            <div className="relative w-32 h-32 md:w-48 md:h-48 flex items-center justify-center overflow-hidden rounded-full">
-              {/* Golden specular highlight */}
-              <div className="absolute inset-0 rounded-full border-t border-l border-[#d6b05e]/30 pointer-events-none" />
+          {/* Logo */}
+          <div className="relative z-10 flex flex-col items-center gap-6">
+            <div className="w-28 h-28 md:w-40 md:h-40 rounded-full overflow-hidden border-2 border-[#c9a45c]/20 shadow-[0_0_40px_rgba(201,164,92,0.1)] animate-breath">
               <img
                 src="/logo-crownwing.jpg"
-                alt="Crownwing Logo"
-                className="w-full h-full object-cover drop-shadow-[0_0_25px_rgba(233,193,118,0.4)]"
+                alt="CrownWing"
+                className="w-full h-full object-cover"
               />
             </div>
-            <h1 className="font-serif text-4xl md:text-5xl text-[#e9c349] mt-6 tracking-widest drop-shadow-[0_2px_10px_rgba(233,193,118,0.2)]">
+            <h1 className="font-serif text-3xl md:text-4xl text-[#c9a45c] tracking-[0.08em] font-light">
               Crownwing
             </h1>
           </div>
 
-          {/* Loading UI: Minimal & High-End */}
-          <div className="absolute bottom-20 left-0 right-0 z-30 flex flex-col items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span className="font-sans text-xs text-[#e9c349]/60 tracking-[0.25em] uppercase">
-                Refining Experience
-              </span>
-            </div>
-            {/* Fine Golden Progress Line */}
-            <div className="relative w-48 h-[1px] bg-white/10 overflow-hidden">
-              <div className="absolute top-0 left-0 h-full bg-[#e9c349] animate-progress shadow-[0_0_8px_rgba(233,193,118,0.8)]" />
+          {/* Bottom bar */}
+          <div className="absolute bottom-12 flex flex-col items-center gap-3">
+            <span className="text-[#c9a45c]/60 text-[10px] uppercase tracking-[0.3em]">
+              Refining Experience
+            </span>
+            <div className="w-12 h-[1px] bg-[#1a2240] rounded-full overflow-hidden">
+              <div className="h-full bg-[#c9a45c] animate-progress" />
             </div>
           </div>
 
-          {/* Decorative Elements for Depth */}
-          <div className="absolute top-8 left-8 z-40 opacity-20 hidden md:block">
-            <span className="font-sans text-sm text-[#e9c349] tracking-widest border-l border-[#e9c349]/30 pl-6 py-1">
-              EST. 2024
-            </span>
-          </div>
-          <div className="absolute top-8 right-8 z-40 opacity-20 hidden md:block">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e9c349" strokeWidth="1.5">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-              <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
-            </svg>
-          </div>
+          {/* EST badge (desktop only) */}
+          <span className="hidden md:block absolute top-8 left-10 text-[#8b92a8]/20 text-[10px] tracking-[0.3em] uppercase">
+            Est. 2024
+          </span>
         </motion.div>
       )}
     </AnimatePresence>

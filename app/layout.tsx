@@ -1,48 +1,47 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const inter = Inter({
-  variable: "--font-inter",
   subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
 });
 
 const playfair = Playfair_Display({
-  variable: "--font-playfair",
   subsets: ["latin"],
+  variable: "--font-playfair",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "CrownWing — Crafted for Comfort. Designed for Elegance.",
   description:
-    "Discover premium, handcrafted furniture designed for modern living. CrownWing blends organic forms with timeless elegance.",
-  keywords: [
-    "furniture",
-    "premium sofa",
-    "modern design",
-    "handcrafted",
-    "CrownWing",
-  ],
+    "Premium handcrafted furniture blending organic forms with timeless elegance. Discover sofas, chairs, and statement pieces designed for modern living.",
+  keywords: ["furniture", "luxury", "sofas", "handcrafted", "CrownWing"],
   openGraph: {
-    title: "CrownWing — Premium Furniture Collection",
-    description:
-      "Discover premium, handcrafted furniture designed for modern living.",
+    title: "CrownWing — Crafted for Comfort",
+    description: "Premium handcrafted furniture for modern living.",
     type: "website",
   },
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html
-      lang="en"
-      className={`${inter.variable} ${playfair.variable} h-full antialiased`}
-    >
-      <body className="min-h-[calc(100vh-40px)] flex flex-col m-[20px] rounded-[20px]">
-        {children}
+    <html lang="en" className={`${inter.variable} ${playfair.variable} h-full antialiased`}>
+      <head>
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+      </head>
+      <body className="min-h-screen flex flex-col bg-[#06080f] relative">
+        <Navbar />
+        <main className="flex-1 relative z-[1]">{children}</main>
+        <Footer />
       </body>
     </html>
   );
