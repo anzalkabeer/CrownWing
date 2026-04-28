@@ -6,6 +6,7 @@ export interface User {
   passwordHash: string;
   name: string;
   phone?: string;    // Optional or required depending on the use case
+  authProvider?: string; // e.g. 'google', 'apple', or undefined for password
   createdAt: string;
 }
 
@@ -21,7 +22,16 @@ export async function generateNextUserId(): Promise<string> {
     { upsert: true, returnDocument: 'after' }
   );
 
-  const sequenceNumber = counter?.seq || 1;
+  if (!counter || typeof counter.seq !== 'number') {
+    throw new Error('Failed to generate unique user ID: counter is null or undefined.');
+  }
+
+  const sequenceNumber = counter.seq;
+  
+  if (sequenceNumber > 9999) {
+    throw new Error('Maximum user ID limit exceeded (9999).');
+  }
+
   // Pad with zeros to 4 digits (e.g., 0001)
   const paddedNumber = sequenceNumber.toString().padStart(4, '0');
   
@@ -37,7 +47,10 @@ async function ensureIndexes() {
   await db.collection('users').createIndex({ id: 1 }, { unique: true });
 }
 
-ensureIndexes().catch(console.error);
+ensureIndexes().catch((err) => {
+  console.error("Failed to ensure MongoDB indexes. Exiting...", err);
+  process.exit(1);
+});
 
 /**
  * Internal lookup by email for authentication purposes only.

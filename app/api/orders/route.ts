@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import { createOrder, getUserOrders } from '@/lib/orders';
 import { AppError, handleApiError } from '@/lib/api-error';
+import { collectionItems } from '@/lib/data';
 import Razorpay from 'razorpay';
 
 const razorpay = new Razorpay({
@@ -20,7 +21,10 @@ export async function GET(request: NextRequest) {
     const decoded = verifyToken(token);
     if (!decoded) throw new AppError('Unauthorized', 401);
 
-    const orders = await getUserOrders(decoded.userId);
+    const limit = parseInt(request.nextUrl.searchParams.get('limit') || '20', 10);
+    const skip = parseInt(request.nextUrl.searchParams.get('skip') || '0', 10);
+
+    const orders = await getUserOrders(decoded.userId, isNaN(limit) ? 20 : limit, isNaN(skip) ? 0 : skip);
     return NextResponse.json({ orders }, { status: 200 });
 
   } catch (error) {
@@ -47,17 +51,27 @@ export async function POST(request: NextRequest) {
       throw new AppError('Order must contain at least one item.', 400);
     }
 
-    // Amount is formatted like "Rs. 18,999" -> parse it or rely on the totalAmount sent from frontend.
-    // It's safer to re-calculate it or just use a parsed totalAmount.
-    // Assuming totalAmount is a valid number representing the total in rupees.
-    const numericAmount = typeof totalAmount === 'number' ? totalAmount : parseInt(String(totalAmount).replace(/[^0-9]/g, ''), 10);
+    // Calculate authoritative serverTotal
+    let computedTotal = 0;
+    for (const item of items) {
+      const dbProduct = collectionItems.find((p) => p.id === item.id);
+      if (!dbProduct) throw new AppError(`Product with id ${item.id} not found`, 404);
+      
+      const priceStr = dbProduct.price.replace(/,/g, '').replace(/[^0-9.]/g, '');
+      const price = parseFloat(priceStr);
+      if (isNaN(price)) throw new AppError('Invalid product price in database', 500);
+      
+      computedTotal += price * item.quantity;
+    }
+
+    const numericAmount = computedTotal;
     
-    if (isNaN(numericAmount) || numericAmount <= 0) {
+    if (!isFinite(numericAmount) || numericAmount <= 0) {
       throw new AppError('Invalid total amount', 400);
     }
 
     // Razorpay amount is in smallest currency unit (paise)
-    const amountInPaise = numericAmount * 100;
+    const amountInPaise = Math.round(numericAmount * 100);
 
     const rzpOrder = await razorpay.orders.create({
       amount: amountInPaise,

@@ -1,6 +1,6 @@
 /**
- * In-memory sliding-window rate limiter for CrownWing.
- *
+ * In-memory fixed-window rate limiter for CrownWing.
+ * Note: this has edge-case burst behavior at window boundaries.
  * Suitable for single-instance / dev deployments.
  * For multi-instance production, swap to Redis-backed storage
  * (e.g., @upstash/ratelimit).
@@ -48,6 +48,13 @@ export function rateLimit(
   limit: number,
   windowMs: number
 ): RateLimitResult {
+  if (!Number.isInteger(limit) || limit <= 0) {
+    throw new Error('limit must be a positive integer');
+  }
+  if (typeof windowMs !== 'number' || windowMs <= 0 || isNaN(windowMs)) {
+    throw new Error('windowMs must be a positive number');
+  }
+
   cleanupExpired();
 
   const now = Date.now();

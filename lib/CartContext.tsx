@@ -39,6 +39,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         const data = await res.json();
         setCarts(data.carts || []);
         setActiveCartId(data.activeCartId || "");
+      } else {
+        const errText = await res.text();
+        console.error("Failed to fetch carts:", res.status, errText);
       }
     } catch (e) {
       console.error("Failed to fetch carts", e);
@@ -59,12 +62,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const newCarts = [...prev];
       const cartIndex = newCarts.findIndex((c) => c.id === activeCartId);
       if (cartIndex > -1) {
-        const items = [...newCarts[cartIndex].items];
+        let items = [...newCarts[cartIndex].items];
         const itemIndex = items.findIndex((i) => i.id === product.id);
         if (itemIndex > -1) {
-          items[itemIndex].quantity += quantity;
+          const updatedItem = { ...items[itemIndex], quantity: items[itemIndex].quantity + quantity };
+          items = [...items.slice(0, itemIndex), updatedItem, ...items.slice(itemIndex + 1)];
         } else {
-          items.push({ ...product, quantity });
+          items = [...items, { ...product, quantity }];
         }
         newCarts[cartIndex] = { ...newCarts[cartIndex], items };
       }
@@ -90,7 +94,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const newCarts = [...prev];
       const cartIndex = newCarts.findIndex((c) => c.id === activeCartId);
       if (cartIndex > -1) {
-        newCarts[cartIndex].items = newCarts[cartIndex].items.filter((i) => i.id !== productId);
+        const oldCart = newCarts[cartIndex];
+        const updatedCart = { ...oldCart, items: oldCart.items.filter((i) => i.id !== productId) };
+        newCarts.splice(cartIndex, 1, updatedCart);
       }
       return newCarts;
     });
@@ -105,6 +111,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const switchCart = async (cartId: string) => {
+    const prev = activeCartId;
     setActiveCartId(cartId);
     try {
       await fetch("/api/cart", {
@@ -115,6 +122,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       await fetchCarts();
     } catch (e) {
       console.error(e);
+      setActiveCartId(prev);
+      await fetchCarts();
     }
   };
 

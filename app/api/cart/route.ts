@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
   try {
     const { sessionId, isNew } = getCartSession(request);
     
-    let cartDoc = null;
+    let cartDoc: any = null;
     if (!isNew) {
       const db = await getDb();
       cartDoc = await db.collection('carts').findOne({ sessionId });
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
     
     // Upsert logic for multi-cart
     const cartCollection = db.collection('carts');
-    let cartDoc = await cartCollection.findOne({ sessionId });
+    let cartDoc: any = await cartCollection.findOne({ sessionId });
 
     if (!cartDoc) {
       cartDoc = {
@@ -165,7 +165,7 @@ export async function DELETE(request: NextRequest) {
     
     if (targetCartIndex > -1) {
       const items = cartDoc.carts[targetCartIndex].items || [];
-      cartDoc.carts[targetCartIndex].items = items.filter((item: any) => item.id !== pId);
+      cartDoc.carts[targetCartIndex].items = items.filter((item: any) => Number(item.id) !== pId);
 
       await cartCollection.updateOne(
         { sessionId },
@@ -187,7 +187,7 @@ export async function PUT(request: NextRequest) {
     const db = await getDb();
     const cartCollection = db.collection('carts');
     
-    let cartDoc = await cartCollection.findOne({ sessionId });
+    let cartDoc: any = await cartCollection.findOne({ sessionId });
     if (!cartDoc) {
       cartDoc = {
         sessionId,
@@ -198,10 +198,13 @@ export async function PUT(request: NextRequest) {
 
     if (action === "SWITCH_CART") {
       if (!cartId) throw new AppError("cartId is required", 400);
+      
+      const exists = cartDoc.carts.some((c: any) => c.id === cartId);
+      if (!exists) throw new AppError("cartId not found", 404);
+
       await cartCollection.updateOne(
         { sessionId },
-        { $set: { activeCartId: cartId, updatedAt: new Date() } },
-        { upsert: true }
+        { $set: { activeCartId: cartId, updatedAt: new Date() } }
       );
       return NextResponse.json({ message: 'Switched cart' });
     }
@@ -219,3 +222,7 @@ export async function PUT(request: NextRequest) {
     }
 
     throw new AppError("Invalid action", 400);
+  } catch (error) {
+    return handleApiError(error);
+  }
+}

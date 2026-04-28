@@ -25,7 +25,7 @@ export function proxy(request: NextRequest) {
   );
 
   if (!success) {
-    const retryAfterSeconds = Math.ceil((resetTime - Date.now()) / 1000);
+    const retryAfterSeconds = Math.max(1, Math.ceil((resetTime - Date.now()) / 1000));
 
     return NextResponse.json(
       { error: 'Too many requests. Please try again later.' },

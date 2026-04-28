@@ -3,6 +3,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { getUserByEmail, saveUser, User, generateNextUserId } from '@/lib/db';
 import { signToken } from '@/lib/auth';
 import { handleApiError, AppError } from '@/lib/api-error';
+import crypto from 'crypto';
 
 const client = new OAuth2Client(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID);
 
@@ -24,6 +25,10 @@ export async function POST(request: Request) {
     if (!payload || !payload.email) {
       throw new AppError('Invalid Google credential payload', 401);
     }
+    
+    if (!payload.email_verified) {
+      throw new AppError('Unverified Google email', 401);
+    }
 
     const { email, name } = payload;
     const trimmedEmail = email.toLowerCase().trim();
@@ -39,15 +44,24 @@ export async function POST(request: Request) {
         id: userId,
         name: name || email.split('@')[0],
         email: trimmedEmail,
-        // Since Google manages the password, we don't store one, 
-        // or we store a dummy one to satisfy the DB schema (if required).
-        // For security, an impossibly-to-match hash is good practice.
-        passwordHash: 'GOOGLE_AUTH', 
+        passwordHash: crypto.randomBytes(32).toString('hex'), 
+        authProvider: 'google',
         createdAt: new Date().toISOString(),
       };
 
-      await saveUser(newUser);
-      user = newUser;
+      try {
+        await saveUser(newUser);
+        user = newUser;
+      } catch (err: any) {
+        if (err.code === 11000) {
+          // Race condition occurred; someone else registered this email right now.
+          const existingUser = await getUserByEmail(trimmedEmail);
+          if (!existingUser) throw new AppError('Account creation conflict', 500);
+          user = existingUser;
+        } else {
+          throw err;
+        }
+      }
     }
 
     // Generate our application JWT

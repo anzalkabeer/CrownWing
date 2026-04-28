@@ -35,13 +35,19 @@ export async function createOrder(order: Omit<Order, 'id' | 'createdAt'>): Promi
 }
 
 /**
- * Fetch past orders for a specific user.
+ * Fetch past orders for a specific user with pagination.
  */
-export async function getUserOrders(userId: string): Promise<Order[]> {
+export async function getUserOrders(userId: string, limit: number = 20, skip: number = 0): Promise<Order[]> {
   const db = await getDb();
+  
+  const safeLimit = Math.min(Math.max(1, limit), 100);
+  const safeSkip = Math.max(0, skip);
+
   const orders = await db.collection('orders')
     .find({ userId })
     .sort({ createdAt: -1 })
+    .skip(safeSkip)
+    .limit(safeLimit)
     .toArray();
 
   return orders.map(o => ({

@@ -28,8 +28,12 @@ function formatPrice(n: number): string {
 }
 
 export default function PaymentPage() {
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState("");
+  const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false);
+  const [isRazorpayError, setIsRazorpayError] = useState(false);
   const router = useRouter();
 
   // Load Razorpay Script
@@ -37,8 +41,14 @@ export default function PaymentPage() {
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
+    script.onload = () => setIsRazorpayLoaded(true);
+    script.onerror = () => setIsRazorpayError(true);
     document.body.appendChild(script);
-    return () => { document.body.removeChild(script); };
+    return () => { 
+      script.onload = null;
+      script.onerror = null;
+      document.body.removeChild(script); 
+    };
   }, []);
 
   useEffect(() => {
@@ -59,6 +69,15 @@ export default function PaymentPage() {
 
   const handlePayment = async () => {
     if (items.length === 0) return;
+    if (isRazorpayError) {
+      setPaymentError("Failed to load payment gateway. Please refresh and try again.");
+      return;
+    }
+    if (!isRazorpayLoaded || !window.Razorpay) {
+      setPaymentError("Payment gateway is still loading. Please wait a moment.");
+      return;
+    }
+    
     setIsProcessing(true);
     setPaymentError("");
 

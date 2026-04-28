@@ -63,7 +63,7 @@
 - Full codec-quality frames (H.264/H.265) instead of over-compressed JPEGs
 - Native hardware decoding support on all modern devices
 - Zero canvas overhead
-**Status:** ✅ **RESOLVED**. Implemented a High-Performance Canvas Image Sequence System with optimized loading and perfect Apple-like frame blending.
+**Status:** ✅ **RESOLVED**. The recommendation to use `hero-video.mp4` for scroll-driven video scrubbing was intentionally not followed to ensure perfectly smooth, frame-by-frame scrubbing without video keyframe lag (a common issue on mobile browsers). Instead, we optimized the existing canvas approach into a High-Performance Canvas Image Sequence System with batched frame preloading, eliminating the initial loading bottleneck while preserving the Apple-like cinematic feel.
 
 ---
 
@@ -164,7 +164,7 @@ These are completely disconnected. If you update a product in MongoDB, the SSG p
 **File:** `app/api/auth/page.tsx` lines 210–217  
 **Problem:** Apple and Google sign-in buttons render but have no `onClick` handlers — they're purely decorative.  
 **Fix:** Either implement OAuth flows (via NextAuth or similar), or remove the buttons to avoid user confusion.
-**Status:** ✅ **RESOLVED**. Successfully implemented a working Google Sign-In pipeline mapped directly to MongoDB profiles using `@react-oauth/google`.
+**Status:** ✅ **RESOLVED**. Successfully implemented a working Google Sign-In pipeline mapped directly to MongoDB profiles using `@react-oauth/google`. The Apple sign-in flow remains unimplemented.
 
 ---
 

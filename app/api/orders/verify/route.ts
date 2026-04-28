@@ -12,14 +12,20 @@ export async function POST(request: NextRequest) {
       throw new AppError('Missing payment verification details', 400);
     }
 
-    const secret = process.env.RAZORPAY_KEY_SECRET || '';
+    const secret = process.env.RAZORPAY_KEY_SECRET;
+    if (!secret) {
+      throw new AppError('Server configuration error: missing Razorpay secret', 500);
+    }
     
     // Create the expected signature
     const hmac = crypto.createHmac('sha256', secret);
     hmac.update(`${razorpay_order_id}|${razorpay_payment_id}`);
     const expectedSignature = hmac.digest('hex');
 
-    if (expectedSignature !== razorpay_signature) {
+    const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+    const signatureBuffer = Buffer.from(razorpay_signature, 'hex');
+
+    if (expectedBuffer.length !== signatureBuffer.length || !crypto.timingSafeEqual(expectedBuffer, signatureBuffer)) {
       throw new AppError('Invalid payment signature', 400);
     }
 
@@ -29,7 +35,7 @@ export async function POST(request: NextRequest) {
 
     // Update the order status in DB
     const result = await ordersCollection.findOneAndUpdate(
-      { razorpayOrderId: razorpay_order_id },
+      { razorpayOrderId: razorpay_order_id, status: { $ne: 'paid' } },
       { 
         $set: { 
           status: 'paid', 
@@ -40,7 +46,15 @@ export async function POST(request: NextRequest) {
     );
 
     if (!result) {
-      throw new AppError('Order not found', 404);
+      // It might be already paid or not found
+      const existing = await ordersCollection.findOne({ razorpayOrderId: razorpay_order_id });
+      if (!existing) {
+        throw new AppError('Order not found', 404);
+      }
+      if (existing.status === 'paid') {
+        throw new AppError('Order is already paid', 400);
+      }
+      throw new AppError('Failed to update order', 500);
     }
 
     return NextResponse.json({ 

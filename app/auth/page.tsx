@@ -57,9 +57,10 @@ export default function AuthPage() {
     }
   };
 
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
   return (
-    <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}>
-      <div className="velvet-bg min-h-screen flex items-center justify-center p-6 text-on-surface font-body-md antialiased relative">
+    <div className="velvet-bg min-h-screen flex items-center justify-center p-6 text-on-surface font-body-md antialiased relative">
       <div className="glass-card w-full max-w-[460px] rounded-xl p-stack-lg relative z-10 flex flex-col gap-stack-md">
         
         {/* Header */}
@@ -175,15 +176,19 @@ export default function AuthPage() {
 
         {/* Social Buttons */}
         <div className="flex gap-4 items-center justify-center">
-          <div className="flex-1 flex justify-center">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() => setError("Google Sign-In failed")}
-              theme="filled_black"
-              shape="rectangular"
-              text="continue_with"
-            />
-          </div>
+          {clientId ? (
+            <div className="flex-1 flex justify-center">
+              <GoogleOAuthProvider clientId={clientId}>
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => setError("Google Sign-In failed")}
+                  theme="filled_black"
+                  shape="rectangular"
+                  text="continue_with"
+                />
+              </GoogleOAuthProvider>
+            </div>
+          ) : null}
           <button type="button" className="flex-1 bg-[#121a35] border border-outline-variant hover:border-primary-container/50 rounded-DEFAULT py-[9px] flex items-center justify-center gap-2 transition-all">
             <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>ios</span>
             <span className="font-label-sm text-label-sm text-on-surface">APPLE</span>
@@ -192,6 +197,5 @@ export default function AuthPage() {
 
       </div>
     </div>
-    </GoogleOAuthProvider>
   );
 }

@@ -21,15 +21,17 @@ export async function POST(request: Request) {
     // Find user
     const user = await getUserByEmail(trimmedEmail);
     if (!user) {
-      // Explicitly tell the client the account doesn't exist 
-      // so they can toggle to the signup page.
-      throw new AppError('Account not found. Please sign up first.', 404);
+      throw new AppError('Invalid credentials', 401);
+    }
+
+    if (user.authProvider && user.authProvider !== 'password') {
+      throw new AppError('Invalid credentials', 401);
     }
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
-      throw new AppError('Incorrect password. Please try again.', 401);
+      throw new AppError('Invalid credentials', 401);
     }
 
     // Generate JWT
