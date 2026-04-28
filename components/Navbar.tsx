@@ -2,24 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCart } from "@/lib/CartContext";
 
 export default function Navbar() {
   const pathname = usePathname();
-  const [cartCount, setCartCount] = useState(0);
-
-  useEffect(() => {
-    // Simple mock cart count fetch
-    fetch("/api/cart")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.items) {
-          const count = d.items.reduce((acc: number, item: any) => acc + item.quantity, 0);
-          setCartCount(count);
-        }
-      })
-      .catch(() => {});
-  }, [pathname]);
+  const { activeCart } = useCart();
+  
+  const cartCount = activeCart?.items?.reduce((acc: number, item: any) => acc + item.quantity, 0) || 0;
 
   return (
     <>

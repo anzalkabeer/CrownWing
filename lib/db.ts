@@ -1,51 +1,88 @@
-import fs from 'fs';
-import path from 'path';
+import { getDb } from './mongodb';
 
-// Define the User type
 export interface User {
-  id: string;
-  email: string;
+  id: string;        // The "Special Primary Key"
+  email: string;     // Unique Candidate Key
   passwordHash: string;
   name: string;
+  phone?: string;    // Optional or required depending on the use case
   createdAt: string;
 }
 
-// Path to our local JSON database
-const dataDir = path.join(process.cwd(), 'data');
-const dbPath = path.join(dataDir, 'users.json');
+/**
+ * Generate the "Special Primary Key" in format CW-26-XXXX.
+ * Uses a counters collection in MongoDB to ensure auto-incrementing unique IDs.
+ */
+export async function generateNextUserId(): Promise<string> {
+  const db = await getDb();
+  const counter = await db.collection('counters').findOneAndUpdate(
+    { _id: 'userId' },
+    { $inc: { seq: 1 } },
+    { upsert: true, returnDocument: 'after' }
+  );
 
-// Ensure the database file exists when this module is loaded
-function initDb() {
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-  }
-  if (!fs.existsSync(dbPath)) {
-    fs.writeFileSync(dbPath, JSON.stringify([]));
-  }
+  const sequenceNumber = counter?.seq || 1;
+  // Pad with zeros to 4 digits (e.g., 0001)
+  const paddedNumber = sequenceNumber.toString().padStart(4, '0');
+  
+  return `CW-26-${paddedNumber}`;
 }
 
-// Read all users
-export function getUsers(): User[] {
-  initDb();
-  const data = fs.readFileSync(dbPath, 'utf-8');
-  return JSON.parse(data);
+/**
+ * Initialize MongoDB collection with unique index for Email.
+ */
+async function ensureIndexes() {
+  const db = await getDb();
+  await db.collection('users').createIndex({ email: 1 }, { unique: true });
+  await db.collection('users').createIndex({ id: 1 }, { unique: true });
 }
 
-// Find a user by email
-export function getUserByEmail(email: string): User | undefined {
-  const users = getUsers();
-  return users.find(u => u.email === email);
+ensureIndexes().catch(console.error);
+
+/**
+ * Internal lookup by email for authentication purposes only.
+ * Email is a candidate key, not the primary identifier.
+ */
+export async function getUserByEmail(email: string): Promise<User | null> {
+  const db = await getDb();
+  const user = await db.collection('users').findOne({ email });
+  if (!user) return null;
+
+  return {
+    id: user.id,
+    email: user.email,
+    passwordHash: user.passwordHash,
+    name: user.name,
+    phone: user.phone,
+    createdAt: user.createdAt,
+  };
 }
 
-// Find a user by ID
-export function getUserById(id: string): User | undefined {
-  const users = getUsers();
-  return users.find(u => u.id === id);
+/**
+ * Fetch a user by ID from MongoDB.
+ */
+export async function getUserById(id: string): Promise<User | null> {
+  const db = await getDb();
+  const user = await db.collection('users').findOne({ id });
+  if (!user) return null;
+
+  return {
+    id: user.id,
+    email: user.email,
+    passwordHash: user.passwordHash,
+    name: user.name,
+    phone: user.phone,
+    createdAt: user.createdAt,
+  };
 }
 
-// Save a new user
-export function saveUser(user: User): void {
-  const users = getUsers();
-  users.push(user);
-  fs.writeFileSync(dbPath, JSON.stringify(users, null, 2));
+/**
+ * Save a new user to MongoDB.
+ */
+export async function saveUser(user: User): Promise<void> {
+  const db = await getDb();
+  await db.collection('users').insertOne({
+    ...user,
+    updatedAt: new Date().toISOString()
+  });
 }

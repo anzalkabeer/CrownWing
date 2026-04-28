@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { collectionItems } from '@/lib/data';
+import { handleApiError } from '@/lib/api-error';
 
 export async function GET() {
   try {
@@ -21,7 +22,6 @@ export async function GET() {
       insertedCount: result.insertedCount 
     }, { status: 201 });
   } catch (error) {
-    console.error('Failed to seed database:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return handleApiError(error);
   }
 }

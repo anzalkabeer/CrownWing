@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
+import { handleApiError, AppError } from '@/lib/api-error';
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const resolvedParams = await params;
-    const idParam = resolvedParams.id;
+    const { id: idParam } = await params;
     
     // Attempt to parse ID as a number
     const productId = parseInt(idParam, 10);
@@ -22,10 +22,7 @@ export async function GET(
     const product = await db.collection('products').findOne(query);
 
     if (!product) {
-      return NextResponse.json(
-        { error: 'Product not found' },
-        { status: 404 }
-      );
+      throw new AppError('Product not found', 404);
     }
 
     return NextResponse.json(
@@ -33,10 +30,6 @@ export async function GET(
       { status: 200 }
     );
   } catch (error) {
-    console.error(`Failed to fetch product:`, error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

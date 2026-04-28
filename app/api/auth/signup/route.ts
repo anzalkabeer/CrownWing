@@ -1,45 +1,49 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { getUserByEmail, saveUser, User } from '@/lib/db';
+import { getUserByEmail, saveUser, User, generateNextUserId } from '@/lib/db';
 import { signToken } from '@/lib/auth';
+import { validateSignupInput } from '@/lib/validation';
+import { AppError, handleApiError } from '@/lib/api-error';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, password } = body;
+    const { name, email, password, phone } = body;
 
-    // Validate input
-    if (!name || !email || !password) {
-      return NextResponse.json(
-        { error: 'Name, email, and password are required' },
-        { status: 400 }
-      );
+    // Validate input (email format, password strength, name length)
+    const validation = validateSignupInput({ name, email, password });
+    if (!validation.valid) {
+      throw new AppError(validation.error!, 400);
     }
 
+    const trimmedEmail = (email as string).trim().toLowerCase();
+    const trimmedName = (name as string).trim();
+
     // Check if user already exists
-    const existingUser = getUserByEmail(email);
+    const existingUser = await getUserByEmail(trimmedEmail);
     if (existingUser) {
-      return NextResponse.json(
-        { error: 'User with this email already exists' },
-        { status: 409 }
-      );
+      throw new AppError('User with this email already exists', 409);
     }
 
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
+    // Generate Special Primary Key (CW-26-XXXX)
+    const userId = await generateNextUserId();
+
     // Create user object
     const newUser: User = {
-      id: crypto.randomUUID(),
-      name,
-      email,
+      id: userId,
+      name: trimmedName,
+      email: trimmedEmail,
+      phone: phone,
       passwordHash,
       createdAt: new Date().toISOString(),
     };
 
     // Save to database
-    saveUser(newUser);
+    await saveUser(newUser);
 
     // Generate JWT
     const token = signToken({ userId: newUser.id, email: newUser.email });
@@ -48,7 +52,7 @@ export async function POST(request: Request) {
     const response = NextResponse.json(
       { 
         message: 'User created successfully',
-        user: { id: newUser.id, name: newUser.name, email: newUser.email }
+        user: { id: newUser.id, name: newUser.name, email: newUser.email, phone: newUser.phone }
       },
       { status: 201 }
     );
@@ -64,10 +68,6 @@ export async function POST(request: Request) {
     return response;
 
   } catch (error) {
-    console.error('Signup error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

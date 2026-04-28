@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
+import { handleApiError } from '@/lib/api-error';
 
 export async function GET() {
   try {
@@ -11,10 +12,6 @@ export async function GET() {
       { status: 200 }
     );
   } catch (error) {
-    console.error('Failed to fetch products:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

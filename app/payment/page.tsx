@@ -3,6 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+
+// Declare Razorpay globally
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 interface CartItem {
   id: number;
@@ -20,20 +28,111 @@ function formatPrice(n: number): string {
 }
 
 export default function PaymentPage() {
-  const [items, setItems] = useState<CartItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
+  const router = useRouter();
+
+  // Load Razorpay Script
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+    return () => { document.body.removeChild(script); };
+  }, []);
 
   useEffect(() => {
     fetch("/api/cart")
       .then((r) => r.json())
       .then((d) => {
-        if (d.items) setItems(d.items);
+        if (d.carts) {
+          // Using the active cart from the new multi-cart architecture
+          const active = d.carts.find((c: any) => c.id === d.activeCartId);
+          if (active && active.items) setItems(active.items);
+        }
       })
       .catch(() => {})
       .finally(() => setIsLoading(false));
   }, []);
 
   const subtotal = items.reduce((s, i) => s + parsePrice(i.price) * i.quantity, 0);
+
+  const handlePayment = async () => {
+    if (items.length === 0) return;
+    setIsProcessing(true);
+    setPaymentError("");
+
+    try {
+      // 1. Create order on backend
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items, totalAmount: subtotal }),
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to create order");
+
+      const { razorpayOrderId, amount, currency } = data;
+
+      // 2. Initialize Razorpay options
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "",
+        amount: amount,
+        currency: currency,
+        name: "CrownWing",
+        description: "Premium Furniture Order",
+        order_id: razorpayOrderId,
+        handler: async function (response: any) {
+          try {
+            // 3. Verify Payment
+            const verifyRes = await fetch("/api/orders/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(response),
+            });
+            const verifyData = await verifyRes.json();
+            
+            if (verifyRes.ok) {
+              router.push("/profile"); // Redirect to profile/orders page on success
+            } else {
+              setPaymentError(verifyData.error || "Payment verification failed. Please contact support.");
+            }
+          } catch (err) {
+            setPaymentError("An error occurred during verification. Please contact support.");
+          } finally {
+            setIsProcessing(false);
+          }
+        },
+        prefill: {
+          name: "CrownWing User", // Can be dynamically filled
+          email: "user@example.com",
+        },
+        theme: {
+          color: "#c9a45c", // Gold accent
+        },
+        modal: {
+          ondismiss: function() {
+            setIsProcessing(false);
+            setPaymentError("Payment was cancelled. You can try again.");
+          }
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      
+      rzp.on('payment.failed', function (response: any){
+        setIsProcessing(false);
+        setPaymentError(`Payment Failed: ${response.error.description}`);
+      });
+
+      rzp.open();
+
+    } catch (err: any) {
+      setIsProcessing(false);
+      setPaymentError(err.message || "Something went wrong. Please try again.");
+    }
+  };
 
   return (
     <div className="velvet-bg min-h-screen font-body-md text-body-md selection:bg-primary-container selection:text-on-primary-container">
@@ -174,12 +273,21 @@ export default function PaymentPage() {
 
               {/* Actions */}
               <div className="flex flex-col gap-stack-sm mt-stack-sm">
+                {paymentError && (
+                  <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm font-body-md">
+                    {paymentError}
+                  </div>
+                )}
+                
                 <button 
-                  disabled 
-                  className="metallic-gold-btn opacity-50 cursor-not-allowed w-full py-4 rounded-lg flex items-center justify-center gap-2"
+                  onClick={handlePayment}
+                  disabled={isProcessing || items.length === 0}
+                  className={`metallic-gold-btn w-full py-4 rounded-lg flex items-center justify-center gap-2 transition-all ${isProcessing || items.length === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-95'}`}
                 >
-                  <span className="material-symbols-outlined text-surface text-xl" style={{ fontVariationSettings: "'FILL' 0" }}>lock</span>
-                  <span className="font-label-sm text-label-sm text-surface tracking-widest uppercase">PLACE ORDER - COMING SOON</span>
+                  <span className="material-symbols-outlined text-surface text-xl" style={{ fontVariationSettings: "'FILL' 0" }}>{isProcessing ? 'hourglass_empty' : 'lock'}</span>
+                  <span className="font-label-sm text-label-sm text-surface tracking-widest uppercase">
+                    {isProcessing ? 'PROCESSING...' : `PAY ${formatPrice(subtotal)}`}
+                  </span>
                 </button>
                 
                 <Link href="/cart" className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors text-center mt-2 flex items-center justify-center gap-1">

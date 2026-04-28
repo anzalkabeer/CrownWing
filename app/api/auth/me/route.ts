@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import { getUserById } from '@/lib/db';
+import { AppError, handleApiError } from '@/lib/api-error';
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,28 +17,19 @@ export async function GET(request: NextRequest) {
     }
 
     if (!token) {
-      return NextResponse.json(
-        { error: 'Unauthorized: No token provided' },
-        { status: 401 }
-      );
+      throw new AppError('Unauthorized: No token provided', 401);
     }
 
     // Verify token
     const decoded = verifyToken(token);
     if (!decoded) {
-      return NextResponse.json(
-        { error: 'Unauthorized: Invalid or expired token' },
-        { status: 401 }
-      );
+      throw new AppError('Unauthorized: Invalid or expired token', 401);
     }
 
     // Fetch fresh user data
-    const user = getUserById(decoded.userId);
+    const user = await getUserById(decoded.userId);
     if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized: User no longer exists' },
-        { status: 401 }
-      );
+      throw new AppError('Unauthorized: User no longer exists', 401);
     }
 
     // Return safe user object (excluding password hash)
@@ -54,10 +46,6 @@ export async function GET(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error('Auth check error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

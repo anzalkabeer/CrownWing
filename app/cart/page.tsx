@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useCart } from "@/lib/CartContext";
 
 interface CartItem {
   id: number;
@@ -22,33 +23,28 @@ function formatPrice(n: number): string {
 }
 
 export default function CartPage() {
-  const [items, setItems] = useState<CartItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { carts, activeCartId, activeCart, isLoading, removeFromCart, addToCart, switchCart, createNewCart } = useCart();
+  const [newCartName, setNewCartName] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
 
-  useEffect(() => {
-    fetch("/api/cart")
-      .then((r) => r.json())
-      .then((d) => { if (d.items) setItems(d.items); })
-      .catch(() => {})
-      .finally(() => setIsLoading(false));
-  }, []);
+  const items = activeCart?.items || [];
 
-  const removeItem = useCallback(async (item: CartItem) => {
-    setItems((prev) => prev.filter((i) => i.id !== item.id));
-    try {
-      await fetch("/api/cart", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ productId: item.id }) });
-    } catch { setItems((prev) => [...prev, item]); }
-  }, []);
-
-  const updateQuantity = useCallback(async (item: CartItem, delta: number) => {
+  const updateQuantity = async (item: CartItem, delta: number) => {
     const newQty = item.quantity + delta;
-    if (newQty < 1) return removeItem(item);
-    setItems((prev) => prev.map((i) => i.id === item.id ? { ...i, quantity: newQty } : i));
-    try {
-      await fetch("/api/cart", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ productId: item.id }) });
-      await fetch("/api/cart", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ product: { id: item.id, name: item.name, slug: item.slug, description: item.description, price: item.price, image: item.image }, quantity: newQty }) });
-    } catch { setItems((prev) => prev.map((i) => i.id === item.id ? { ...i, quantity: item.quantity } : i)); }
-  }, [removeItem]);
+    if (newQty < 1) {
+      await removeFromCart(item.id);
+    } else {
+      await addToCart(item, delta);
+    }
+  };
+
+  const handleCreateCart = async () => {
+    if (newCartName.trim()) {
+      await createNewCart(newCartName.trim());
+      setNewCartName("");
+      setIsCreating(false);
+    }
+  };
 
   const subtotal = items.reduce((s, i) => s + parsePrice(i.price) * i.quantity, 0);
   const count = items.reduce((s, i) => s + i.quantity, 0);
@@ -60,8 +56,50 @@ export default function CartPage() {
   return (
     <div className="velvet-bg min-h-screen text-app-text-light font-body-md relative overflow-x-hidden flex flex-col pt-32 pb-24 px-6 md:px-12">
       <main className="relative z-10 w-full max-w-[1200px] mx-auto flex-1 flex flex-col">
+        {/* Multi-Cart Selector UI */}
+        <div className="mb-8 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between border-b border-app-border pb-6">
+          <div className="flex items-center gap-4">
+            <span className="font-label-sm text-app-text-muted uppercase tracking-[0.15em]">Select Cart:</span>
+            <select
+              value={activeCartId}
+              onChange={(e) => switchCart(e.target.value)}
+              className="bg-surface-container-high border border-app-gold/20 rounded-lg px-4 py-2 text-app-gold font-h3 outline-none focus:border-app-gold"
+            >
+              {carts.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {isCreating ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={newCartName}
+                  onChange={(e) => setNewCartName(e.target.value)}
+                  placeholder="New Cart Name"
+                  className="bg-surface-container-high border border-app-gold/20 rounded-lg px-3 py-1.5 text-app-text-light text-sm outline-none"
+                  autoFocus
+                  onKeyDown={(e) => e.key === 'Enter' && handleCreateCart()}
+                />
+                <button onClick={handleCreateCart} className="text-app-gold hover:text-white transition-colors">Save</button>
+                <button onClick={() => setIsCreating(false)} className="text-app-text-muted hover:text-white transition-colors">Cancel</button>
+              </div>
+            ) : (
+              <button 
+                onClick={() => setIsCreating(true)}
+                className="flex items-center gap-1 text-app-gold text-[11px] uppercase tracking-[0.1em] hover:text-white transition-colors px-3 py-2 border border-app-gold/20 rounded-lg"
+              >
+                <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 0" }}>add</span>
+                Create New Cart
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="mb-12">
-          <h1 className="font-h1 text-h1 text-app-text-light font-light mb-2">Your Selection</h1>
+          <h1 className="font-h1 text-h1 text-app-text-light font-light mb-2">{activeCart?.name || "Your Selection"}</h1>
           <p className="font-body-lg text-body-lg text-app-text-muted">
             {count > 0 ? `${count} items in your collection` : "Your collection awaits"}
           </p>
@@ -117,7 +155,7 @@ export default function CartPage() {
                             <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 0" }}>add</span>
                           </button>
                         </div>
-                        <button onClick={() => removeItem(item)} aria-label="Remove item" className="text-app-danger hover:text-red-400 transition-colors p-1">
+                        <button onClick={() => removeFromCart(item.id)} aria-label="Remove item" className="text-app-danger hover:text-red-400 transition-colors p-1">
                           <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>delete</span>
                         </button>
                       </div>

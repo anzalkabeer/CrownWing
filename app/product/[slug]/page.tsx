@@ -13,8 +13,8 @@ export default async function ProductPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const resolvedParams = await params;
-  const product = collectionItems.find((p) => p.slug === resolvedParams.slug);
+  const { slug } = await params;
+  const product = collectionItems.find((p) => p.slug === slug);
 
   if (!product) {
     notFound();

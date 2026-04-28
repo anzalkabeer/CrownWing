@@ -4,24 +4,21 @@ import { useState } from "react";
 import { Product } from "@/lib/data";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useCart } from "@/lib/CartContext";
 
 export default function ClientProductPage({ product }: { product: Product }) {
   const router = useRouter();
   const [isAdding, setIsAdding] = useState(false);
   const [added, setAdded] = useState(false);
 
+  const { addToCart } = useCart();
+
   const handleAddToCart = async () => {
     setIsAdding(true);
     try {
-      const res = await fetch("/api/cart", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ product, quantity: 1 }),
-      });
-      if (res.ok) {
-        setAdded(true);
-        setTimeout(() => setAdded(false), 2000);
-      }
+      await addToCart(product, 1);
+      setAdded(true);
+      setTimeout(() => setAdded(false), 2000);
     } catch (e) {
       console.error(e);
     } finally {

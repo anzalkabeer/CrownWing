@@ -11,6 +11,7 @@
 **File:** `app/product/[slug]/ClientProductPage.tsx` line 171  
 **Problem:** The "Add to Cart" button is a `<Link href="/cart">` — it just navigates to the cart page without ever calling `POST /api/cart`. Nothing is added.  
 **Fix:** Replace the `<Link>` with a `<button>` that calls `fetch('/api/cart', { method: 'POST', body: JSON.stringify({ product }) })` and then optionally navigates to `/cart` on success.
+**Status:** ✅ **RESOLVED**. Implemented a robust React Context (`CartContext`) that syncs with the MongoDB backend. The button now instantly updates the global cart state and UI without page reloads.
 
 ---
 
@@ -18,6 +19,7 @@
 **File:** `app/api/auth/page.tsx`  
 **Problem:** A UI page (`page.tsx`) lives at `app/api/auth/`, which is the API routes directory. In Next.js App Router, files under `app/api/` are conventionally API routes. While Next.js technically allows this, it creates confusion and may break if Next.js tightens conventions. Additionally, the page fetches from relative paths `/auth/login` and `/auth/signup` — these only resolve correctly because the page itself is served from `/api/auth`.  
 **Fix:** Move the auth page to `app/auth/page.tsx` and update the fetch endpoints to `/api/auth/login` and `/api/auth/signup`.
+**Status:** ✅ **RESOLVED**. Auth UI cleanly moved to `app/auth/page.tsx`. Endpoints standardized to `/api/auth/[action]`.
 
 ---
 
@@ -25,6 +27,7 @@
 **File:** `lib/auth.ts` lines 3–7  
 **Problem:** The `JWT_SECRET` check throws at module-import time. If `JWT_SECRET` is missing from `.env`, the *entire application* crashes — not just the auth routes. Any page that transitively imports `lib/auth.ts` (e.g. the cart API route) will cause a fatal server error.  
 **Fix:** Defer the check to function call time, or use `process.env.JWT_SECRET!` with a runtime guard inside `signToken` / `verifyToken`.
+**Status:** ✅ **RESOLVED**. Converted the hard-throw to a lazy accessor `getSecret()` that only evaluates during actual token operations.
 
 ---
 
@@ -60,6 +63,7 @@
 - Full codec-quality frames (H.264/H.265) instead of over-compressed JPEGs
 - Native hardware decoding support on all modern devices
 - Zero canvas overhead
+**Status:** ✅ **RESOLVED**. Implemented a High-Performance Canvas Image Sequence System with optimized loading and perfect Apple-like frame blending.
 
 ---
 
@@ -92,6 +96,7 @@ These are completely disconnected. If you update a product in MongoDB, the SSG p
 **File:** `app/cart/page.tsx` lines 161–167  
 **Problem:** The increment (`+`) and decrement (`–`) buttons in the cart have no `onClick` handlers. They render but do nothing when clicked.  
 **Fix:** Add click handlers that update the local state and sync with `POST /api/cart` or a new `PATCH /api/cart` endpoint.
+**Status:** ✅ **RESOLVED**. Integrated with global `CartContext`. Buttons instantly sync quantities across UI and MongoDB.
 
 ---
 
@@ -99,6 +104,7 @@ These are completely disconnected. If you update a product in MongoDB, the SSG p
 **File:** `app/product/[slug]/ClientProductPage.tsx` line 69  
 **Problem:** The cart icon badge shows a hardcoded `2` regardless of actual cart contents.  
 **Fix:** Fetch the actual cart count from `/api/cart` or use a shared cart context/store.
+**Status:** ✅ **RESOLVED**. Global `<Navbar />` now dynamically computes the badge total from `CartContext`.
 
 ---
 
@@ -106,6 +112,7 @@ These are completely disconnected. If you update a product in MongoDB, the SSG p
 **Files:** `app/page.tsx`, `app/cart/page.tsx`, `app/contact/page.tsx`, `app/product/[slug]/ClientProductPage.tsx`, `app/api/auth/page.tsx`  
 **Problem:** Every page has its own navbar implementation, all slightly different — different links, different styling, different breakpoints. Changes need to be replicated across 5+ files.  
 **Fix:** Extract a shared `<Navbar />` component with consistent links and styling, used from `layout.tsx` or each page.
+**Status:** ✅ **RESOLVED**. Unified into a single `<Navbar />` component deployed globally via `app/layout.tsx`.
 
 ---
 
@@ -157,6 +164,7 @@ These are completely disconnected. If you update a product in MongoDB, the SSG p
 **File:** `app/api/auth/page.tsx` lines 210–217  
 **Problem:** Apple and Google sign-in buttons render but have no `onClick` handlers — they're purely decorative.  
 **Fix:** Either implement OAuth flows (via NextAuth or similar), or remove the buttons to avoid user confusion.
+**Status:** ✅ **RESOLVED**. Successfully implemented a working Google Sign-In pipeline mapped directly to MongoDB profiles using `@react-oauth/google`.
 
 ---
 
@@ -227,6 +235,7 @@ These are completely disconnected. If you update a product in MongoDB, the SSG p
 **File:** `data/users.json`  
 **Problem:** User credentials (including bcrypt hashes) are stored in a plain JSON file on the filesystem. This doesn't scale, isn't atomic for concurrent writes, and the file is committed to the repo with actual user data.  
 **Suggestion:** Migrate user storage to MongoDB (which is already connected for carts and products).
+**Status:** ✅ **RESOLVED**. The `users.json` legacy system has been completely eradicated. All user auth now reads/writes robustly from MongoDB.
 
 ---
 

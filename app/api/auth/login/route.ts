@@ -2,36 +2,34 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { getUserByEmail } from '@/lib/db';
 import { signToken } from '@/lib/auth';
+import { validateLoginInput } from '@/lib/validation';
+import { AppError, handleApiError } from '@/lib/api-error';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { email, password } = body;
 
-    // Validate input
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      );
+    // Validate input (email format, password presence)
+    const validation = validateLoginInput({ email, password });
+    if (!validation.valid) {
+      throw new AppError(validation.error!, 400);
     }
 
+    const trimmedEmail = (email as string).trim().toLowerCase();
+
     // Find user
-    const user = getUserByEmail(email);
+    const user = await getUserByEmail(trimmedEmail);
     if (!user) {
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
+      // Explicitly tell the client the account doesn't exist 
+      // so they can toggle to the signup page.
+      throw new AppError('Account not found. Please sign up first.', 404);
     }
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
+      throw new AppError('Incorrect password. Please try again.', 401);
     }
 
     // Generate JWT
@@ -57,10 +55,6 @@ export async function POST(request: Request) {
     return response;
 
   } catch (error) {
-    console.error('Login error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
