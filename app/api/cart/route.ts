@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
 
     // Validate quantity
     if (typeof quantity !== 'number' || !Number.isInteger(quantity) || quantity < 1 || quantity > 20) {
-      throw new AppError('Quantity must be a positive integer.', 400);
+      throw new AppError('Quantity must be an integer between 1 and 20.', 400);
     }
 
     const productId = Number(product.id);

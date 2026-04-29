@@ -27,7 +27,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = body;
 
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+    if (
+      typeof razorpay_order_id !== 'string' || !razorpay_order_id.trim() ||
+      typeof razorpay_payment_id !== 'string' || !razorpay_payment_id.trim() ||
+      typeof razorpay_signature !== 'string' || !razorpay_signature.trim()
+    ) {
       throw new AppError('Missing payment verification details', 400);
     }
 
@@ -83,7 +87,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update the order status in DB
-    const result = await ordersCollection.findOneAndUpdate(
+    let result = await ordersCollection.findOneAndUpdate(
       { razorpayOrderId: razorpay_order_id, userId: decoded.userId, status: { $ne: 'paid' } },
       { 
         $set: { 
@@ -100,7 +104,15 @@ export async function POST(request: NextRequest) {
       if (!existing) {
         throw new AppError('Order not found', 404);
       }
-      throw new AppError('Failed to update order', 500);
+      if (existing.status === 'paid' || existing.paymentDetails?.razorpay_payment_id) {
+        return NextResponse.json({
+          success: true,
+          message: 'Payment already verified',
+          orderId: existing.id,
+        }, { status: 200 });
+      } else {
+        throw new AppError('Failed to update order', 500);
+      }
     }
 
     // Now generate PDFs and upload them
@@ -138,10 +150,16 @@ export async function POST(request: NextRequest) {
       ]);
 
       // 3. Store URLs in DB
-      await ordersCollection.updateOne(
-        { _id: result._id },
-        { $set: { receiptUrl, slipUrl } }
-      );
+      try {
+        await ordersCollection.updateOne(
+          { _id: result._id },
+          { $set: { receiptUrl, slipUrl } }
+        );
+      } catch (dbErr) {
+        console.error('Failed to persist URLs:', result._id, receiptUrl, slipUrl);
+        await ordersCollection.updateOne({ _id: result._id }, { $set: { urlPersistenceFailed: true } });
+        throw new AppError('Failed to persist document URLs', 500);
+      }
 
       return NextResponse.json({ 
         success: true,
@@ -154,10 +172,9 @@ export async function POST(request: NextRequest) {
     } catch (pdfError) {
       console.error('PDF Generation/Upload Failed:', pdfError);
       // Even if PDF fails, the payment was verified successfully.
-      // We return 200 but maybe indicate that documents failed to generate so they can be retried later.
       return NextResponse.json({ 
         success: true,
-        message: 'Payment verified, but document generation failed. They will be generated shortly.',
+        message: 'Payment verified but document generation failed; please retry or contact support',
         orderId: result.id,
       }, { status: 200 });
     }

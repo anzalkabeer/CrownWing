@@ -44,7 +44,7 @@ export default function AdminDashboard() {
           fetch("/api/admin/documents")
         ]);
 
-        if (ordersRes.status === 401 || ordersRes.status === 403) {
+        if (ordersRes.status === 401 || ordersRes.status === 403 || docsRes.status === 401 || docsRes.status === 403) {
           router.push("/auth");
           return;
         }
@@ -156,7 +156,11 @@ export default function AdminDashboard() {
                           {new Date(order.createdAt).toLocaleDateString()}
                         </td>
                         <td className="p-4 font-label-md text-primary-container">
-                          Rs. {parseFloat(order.totalAmount).toLocaleString('en-IN')}
+                          Rs. {(() => {
+                            const parsed = parseFloat(order.totalAmount);
+                            const safeValue = Number.isFinite(parsed) ? parsed : 0;
+                            return safeValue.toLocaleString('en-IN');
+                          })()}
                         </td>
                         <td className="p-4">
                           <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold tracking-widest ${

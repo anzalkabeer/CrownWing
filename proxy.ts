@@ -8,6 +8,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { rateLimit } from '@/lib/rate-limit';
+import net from 'net';
+import crypto from 'crypto';
 
 // Rate limit configuration for auth endpoints.
 const AUTH_RATE_LIMIT = 5;           // max requests
@@ -30,8 +32,7 @@ function setSecurityHeaders(response: NextResponse) {
 }
 
 function isValidIp(value: string | null): value is string {
-  if (!value) return false;
-  return /^(\d{1,3}\.){3}\d{1,3}$/.test(value) || value.includes(':');
+  return Boolean(value) && net.isIP(value) !== 0;
 }
 
 function getClientIp(request: NextRequest): string {
@@ -42,7 +43,20 @@ function getClientIp(request: NextRequest): string {
   const firstForwarded = forwarded?.split(',')[0]?.trim() || null;
   if (isValidIp(firstForwarded)) return firstForwarded;
 
-  return 'unknown';
+  const userAgent = request.headers.get('user-agent') || 'unknown-agent';
+  console.warn('Unable to determine valid client IP', {
+    hasRealIp: Boolean(realIp),
+    hasForwarded: Boolean(forwarded),
+    userAgent,
+  });
+
+  const fingerprint = crypto
+    .createHash('sha256')
+    .update(`${userAgent}|${forwarded || ''}|${request.nextUrl.pathname}`)
+    .digest('hex')
+    .slice(0, 12);
+
+  return `unknown-${fingerprint}`;
 }
 
 export function proxy(request: NextRequest) {

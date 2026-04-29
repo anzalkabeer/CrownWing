@@ -19,6 +19,7 @@ export async function generateReceiptPDF(orderData: PDFOrderData): Promise<Buffe
       const buffers: Buffer[] = [];
 
       doc.on('data', buffers.push.bind(buffers));
+      doc.on('error', err => reject(err));
       doc.on('end', () => resolve(Buffer.concat(buffers)));
 
       // Header
@@ -46,7 +47,10 @@ export async function generateReceiptPDF(orderData: PDFOrderData): Promise<Buffe
       doc.text(`Order ID: ${orderData.orderId}`);
       doc.text(`Payment ID: ${orderData.paymentId}`);
       doc.text(`Date: ${orderData.date}`);
-      doc.text(`Status: Paid`, { stroke: true });
+      
+      // Removed stroke: true and using bold font for emphasis
+      doc.font('Helvetica-Bold').text(`Status: Paid`);
+      doc.font('Helvetica'); // Reset back to normal
 
       doc.text(`Customer Name: ${orderData.customerName}`, 300, startY);
       doc.text(`Email: ${orderData.email}`, 300, doc.y);
@@ -73,14 +77,32 @@ export async function generateReceiptPDF(orderData: PDFOrderData): Promise<Buffe
       doc.font('Helvetica');
       let currentY = doc.y;
       
+      const lineHeight = 20;
+      const bottomMargin = 50;
+
       orderData.items.forEach(item => {
+        if (currentY + lineHeight > doc.page.height - bottomMargin) {
+          doc.addPage();
+          currentY = 50; // reset to top margin
+          
+          // Re-draw Items Table Header on new page
+          doc.font('Helvetica-Bold').fontSize(10);
+          doc.text('Item', 50, currentY);
+          doc.text('Quantity', 300, currentY);
+          doc.text('Price', 400, currentY);
+          doc.moveTo(50, currentY + 5).lineTo(550, currentY + 5).stroke();
+          currentY += lineHeight;
+          doc.font('Helvetica');
+        }
+        
         doc.text(item.name, 50, currentY);
         doc.text(item.quantity.toString(), 300, currentY);
         doc.text(item.price || '-', 400, currentY);
-        currentY += 20;
+        currentY += lineHeight;
       });
       
-      doc.moveTo(50, currentY + 5).lineTo(550, currentY + 5).stroke();
+      doc.y = currentY;
+      doc.moveTo(50, doc.y + 5).lineTo(550, doc.y + 5).stroke();
       
       // Total
       doc.moveDown(2);

@@ -8,6 +8,7 @@ export async function generatePackagingSlipPDF(orderData: PDFOrderData): Promise
       const buffers: Buffer[] = [];
 
       doc.on('data', buffers.push.bind(buffers));
+      doc.on('error', err => reject(err));
       doc.on('end', () => resolve(Buffer.concat(buffers)));
 
       // Header
@@ -65,7 +66,8 @@ export async function generatePackagingSlipPDF(orderData: PDFOrderData): Promise
         currentY += 20;
       });
       
-      doc.moveTo(50, currentY + 5).lineTo(550, currentY + 5).stroke();
+      doc.y = currentY; // Update the cursor!
+      doc.moveTo(50, doc.y + 5).lineTo(550, doc.y + 5).stroke();
       
       // Footer
       doc.moveDown(4);

@@ -21,10 +21,17 @@ export default cloudinary;
  */
 export async function uploadPDF(buffer: Buffer, filename: string): Promise<string> {
   return new Promise((resolve, reject) => {
+    const sanitizedName = filename
+      .replace(/\.[^/.]+$/i, '')
+      .replace(/[^a-zA-Z0-9.\-_]/g, '_')
+      .replace(/[._-]{2,}/g, '_')
+      .replace(/^[._-]+|[._-]+$/g, '')
+      .slice(0, 120) || 'document';
+
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         resource_type: 'raw',
-        public_id: `crownwing/docs/${Date.now()}_${filename.replace('.pdf', '')}`,
+        public_id: `crownwing/docs/${Date.now()}_${sanitizedName}`,
         format: 'pdf',
       },
       (error, result) => {

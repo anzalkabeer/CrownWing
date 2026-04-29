@@ -242,7 +242,7 @@ These are completely disconnected. If you update a product in MongoDB, the SSG p
 ## 🟢 Recently Completed Integrations
 
 ### 34. Razorpay Secure Payment & Webhooks
-**Progress:** 👾 **RESOLVED**. A complete backend-driven Razorpay integration has been established inside the `/app/api/razorpay/` module.
+**Progress:** ✅ **RESOLVED**. A complete backend-driven Razorpay integration has been established inside the `/app/api/razorpay/` module.
 - Order creation intelligently calculates authoritative pricing dynamically.
 - Callbacks and signatures are strictly validated in `verify-payment` using `crypto`.
 - A resilient webhook listener (`/app/api/razorpay/webhook`) catches asynchronous `payment.captured` and `payment.failed` flows to ensure database parity even if the client disconnects.

@@ -30,9 +30,12 @@ export async function GET(request: NextRequest) {
       throw new AppError('Forbidden: Admin access required', 403);
     }
 
-    const limit = parseInt(request.nextUrl.searchParams.get('limit') || '50', 10);
-    const skip = parseInt(request.nextUrl.searchParams.get('skip') || '0', 10);
+    let limit = parseInt(request.nextUrl.searchParams.get('limit') || '50', 10);
+    let skip = parseInt(request.nextUrl.searchParams.get('skip') || '0', 10);
     
+    if (Number.isNaN(limit)) limit = 50;
+    if (Number.isNaN(skip)) skip = 0;
+
     const safeLimit = Math.min(Math.max(1, limit), 200);
     const safeSkip = Math.max(0, skip);
 

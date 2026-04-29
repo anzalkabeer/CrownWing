@@ -6,10 +6,20 @@ import { collectionItems } from '@/lib/data';
 import { assertTrustedOrigin } from '@/lib/security';
 import Razorpay from 'razorpay';
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || '',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || '',
-});
+let razorpay: any = null;
+
+function getRazorpay() {
+  if (!razorpay) {
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+      throw new AppError('Server configuration error: missing Razorpay credentials', 500);
+    }
+    razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+  }
+  return razorpay;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,13 +60,13 @@ export async function POST(request: NextRequest) {
       }
 
       const dbProduct = collectionItems.find((p) => p.id === productId);
-      if (!dbProduct) throw new AppError(`Product with id ${item.id} not found`, 404);
+      if (!dbProduct) throw new AppError(`Product with id ${productId} not found`, 404);
       
       const priceStr = dbProduct.price.replace(/,/g, '').replace(/[^0-9.]/g, '');
-      const price = parseFloat(priceStr);
-      if (isNaN(price)) throw new AppError('Invalid product price in database', 500);
+      const paisePrice = Math.round(parseFloat(priceStr) * 100);
+      if (isNaN(paisePrice) || paisePrice <= 0) throw new AppError('Invalid product price in database', 500);
       
-      computedTotal += price * quantity;
+      computedTotal += paisePrice * quantity;
       normalizedItems.push({
         id: dbProduct.id,
         name: dbProduct.name,
@@ -66,16 +76,17 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const numericAmount = computedTotal;
+    const numericAmount = computedTotal / 100;
     
     if (!isFinite(numericAmount) || numericAmount <= 0) {
       throw new AppError('Invalid total amount', 400);
     }
 
     // Razorpay amount is in smallest currency unit (paise)
-    const amountInPaise = Math.round(numericAmount * 100);
-
-    const rzpOrder = await razorpay.orders.create({
+    const amountInPaise = computedTotal;
+    
+    const rzpClient = getRazorpay();
+    const rzpOrder = await rzpClient.orders.create({
       amount: amountInPaise,
       currency: 'INR',
       receipt: `receipt_${Date.now()}`,

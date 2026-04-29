@@ -48,16 +48,16 @@ export async function GET(request: NextRequest) {
         documents.push({
           type: "Receipt",
           url: makeDownloadableUrl(order.receiptUrl) as string,
-          orderId: order.id,
-          date: order.createdAt
+          orderId: order._id.toString(),
+          date: new Date(order.createdAt).toISOString()
         });
       }
       if (order.slipUrl) {
         documents.push({
           type: "Packaging Slip",
           url: makeDownloadableUrl(order.slipUrl) as string,
-          orderId: order.id,
-          date: order.createdAt
+          orderId: order._id.toString(),
+          date: new Date(order.createdAt).toISOString()
         });
       }
     }
