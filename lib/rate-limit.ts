@@ -12,6 +12,10 @@ interface RateLimitEntry {
 }
 
 // Global store — persists across requests within the same process.
+// WARNING FOR VERCEL DEPLOYMENTS:
+// Next.js serverless functions do NOT share memory. This Map will be isolated
+// to a single lambda instance and will reset frequently. For production rate limiting,
+// you MUST replace this Map with a Redis store (e.g., Upstash).
 const store = new Map<string, RateLimitEntry>();
 
 // Cleanup expired entries every 60 seconds to prevent memory leaks.

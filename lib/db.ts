@@ -40,17 +40,21 @@ export async function generateNextUserId(): Promise<string> {
 
 /**
  * Initialize MongoDB collection with unique index for Email.
+ * Runs asynchronously. We do NOT exit the process on failure 
+ * to prevent Vercel Serverless Function cold-start crashes.
  */
 async function ensureIndexes() {
-  const db = await getDb();
-  await db.collection('users').createIndex({ email: 1 }, { unique: true });
-  await db.collection('users').createIndex({ id: 1 }, { unique: true });
+  try {
+    const db = await getDb();
+    await db.collection('users').createIndex({ email: 1 }, { unique: true });
+    await db.collection('users').createIndex({ id: 1 }, { unique: true });
+  } catch (err) {
+    console.error("Failed to ensure MongoDB indexes. Check your Atlas IP Whitelist (0.0.0.0/0).", err);
+  }
 }
 
-ensureIndexes().catch((err) => {
-  console.error("Failed to ensure MongoDB indexes. Exiting...", err);
-  process.exit(1);
-});
+// Fire and forget
+ensureIndexes();
 
 /**
  * Internal lookup by email for authentication purposes only.
