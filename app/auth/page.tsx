@@ -64,8 +64,19 @@ export default function AuthPage() {
       <div className="glass-card w-full max-w-[460px] rounded-xl p-stack-lg relative z-10 flex flex-col gap-stack-md">
         
         {/* Header */}
-        <div className="text-center">
-          <h1 className="font-h2 text-h2 text-primary-container mb-unit">Welcome Back</h1>
+        <div className="text-center flex flex-col items-center">
+          <Image 
+            src="/Logo.png" 
+            alt="CrownWing" 
+            width={72} 
+            height={72} 
+            className="object-contain mb-6"
+            style={{ width: 72, height: 72 }}
+            priority
+          />
+          <h1 className="font-h2 text-h2 text-primary-container mb-unit">
+            {isLogin ? "Welcome Back" : "Join CrownWing"}
+          </h1>
           <p className="font-body-md text-body-md text-on-surface-variant">
             {isLogin ? "Sign in to your account" : "Create your exclusive account"}
           </p>

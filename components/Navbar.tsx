@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/lib/CartContext";
 
@@ -15,9 +16,17 @@ export default function Navbar() {
       <header className="fixed top-0 w-full z-50 h-20 bg-slate-950 border-b border-amber-500/20 shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center">
         <div className="flex justify-between items-center px-12 w-full max-w-[1440px] mx-auto">
           {/* Brand */}
-          <Link href="/" className="flex items-center gap-2 text-2xl font-serif tracking-[0.25em] text-amber-500 hover:text-amber-400 transition-all duration-500 ease-out">
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>diamond</span>
-            <span className="font-h3 text-h3 text-primary">CROWNWING</span>
+          <Link href="/" className="flex items-center hover:opacity-80 transition-opacity duration-500 ease-out">
+            <Image 
+              src="/Logo.png" 
+              alt="CrownWing" 
+              width={44} 
+              height={44} 
+              className="object-contain"
+              style={{ width: 44, height: 44 }}
+              priority
+            />
+            <span className="ml-2 font-serif text-lg tracking-[0.2em] text-amber-500">CROWNWING</span>
           </Link>
           
           {/* Navigation Links */}

@@ -16,7 +16,7 @@ export interface User {
  */
 export async function generateNextUserId(): Promise<string> {
   const db = await getDb();
-  const counter = await db.collection('counters').findOneAndUpdate(
+  const counter = await db.collection<any>('counters').findOneAndUpdate(
     { _id: 'userId' },
     { $inc: { seq: 1 } },
     { upsert: true, returnDocument: 'after' }

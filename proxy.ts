@@ -8,7 +8,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { rateLimit } from '@/lib/rate-limit';
-import net from 'net';
 import crypto from 'crypto';
 
 // Rate limit configuration for auth endpoints.
@@ -32,7 +31,7 @@ function setSecurityHeaders(response: NextResponse) {
 }
 
 function isValidIp(value: string | null): value is string {
-  return Boolean(value) && net.isIP(value) !== 0;
+  return typeof value === 'string' && value.trim().length > 0;
 }
 
 function getClientIp(request: NextRequest): string {
