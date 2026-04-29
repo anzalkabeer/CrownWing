@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { collectionItems } from '@/lib/data';
-import { handleApiError } from '@/lib/api-error';
+import { AppError, handleApiError } from '@/lib/api-error';
 
 export async function GET() {
   try {
+    if (process.env.NODE_ENV === 'production') {
+      throw new AppError('Not found', 404);
+    }
+
     const db = await getDb();
     const productsCollection = db.collection('products');
 

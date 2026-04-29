@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { OAuth2Client } from 'google-auth-library';
 import { getUserByEmail, saveUser, User, generateNextUserId } from '@/lib/db';
-import { signToken } from '@/lib/auth';
+import { signToken, isAdmin } from '@/lib/auth';
 import { handleApiError, AppError } from '@/lib/api-error';
 import crypto from 'crypto';
 
@@ -71,7 +71,12 @@ export async function POST(request: Request) {
     const response = NextResponse.json(
       { 
         message: 'Google authentication successful',
-        user: { id: user.id, name: user.name, email: user.email }
+        user: { 
+          id: user.id, 
+          name: user.name, 
+          email: user.email,
+          role: isAdmin(user.email) ? 'admin' : 'user'
+        }
       },
       { status: 200 }
     );

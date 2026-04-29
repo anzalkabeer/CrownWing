@@ -11,5 +11,29 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
   secure: true,
 });
-
 export default cloudinary;
+
+/**
+ * Uploads a raw PDF buffer to Cloudinary.
+ * @param buffer - The PDF binary buffer.
+ * @param filename - Desired filename (e.g., 'receipt.pdf').
+ * @returns The secure URL of the uploaded PDF.
+ */
+export async function uploadPDF(buffer: Buffer, filename: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        resource_type: 'raw',
+        public_id: `crownwing/docs/${Date.now()}_${filename.replace('.pdf', '')}`,
+        format: 'pdf',
+      },
+      (error, result) => {
+        if (error) return reject(error);
+        if (!result) return reject(new Error('Cloudinary returned no result.'));
+        resolve(result.secure_url);
+      }
+    );
+
+    uploadStream.end(buffer);
+  });
+}

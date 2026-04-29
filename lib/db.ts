@@ -48,8 +48,9 @@ async function ensureIndexes() {
 }
 
 ensureIndexes().catch((err) => {
-  console.error("Failed to ensure MongoDB indexes. Exiting...", err);
-  process.exit(1);
+  // Keep the process alive; routes should return controlled errors
+  // instead of crashing the entire app when index bootstrap fails.
+  console.error("Failed to ensure MongoDB indexes.", err);
 });
 
 /**
