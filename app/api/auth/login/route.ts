@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { getUserByEmail } from '@/lib/db';
-import { signToken } from '@/lib/auth';
+import { signToken, isAdmin } from '@/lib/auth';
 import { validateLoginInput } from '@/lib/validation';
 import { AppError, handleApiError } from '@/lib/api-error';
 
@@ -41,7 +41,12 @@ export async function POST(request: Request) {
     const response = NextResponse.json(
       { 
         message: 'Login successful',
-        user: { id: user.id, name: user.name, email: user.email }
+        user: { 
+          id: user.id, 
+          name: user.name, 
+          email: user.email,
+          role: isAdmin(user.email) ? 'admin' : 'user'
+        }
       },
       { status: 200 }
     );

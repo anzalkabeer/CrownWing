@@ -83,16 +83,16 @@ export default function PaymentPage() {
 
     try {
       // 1. Create order on backend
-      const res = await fetch("/api/orders", {
+      const res = await fetch("/api/razorpay/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items, totalAmount: subtotal }),
+        body: JSON.stringify({ items }),
       });
       
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to create order");
 
-      const { razorpayOrderId, amount, currency } = data;
+      const { orderId, amount, currency } = data;
 
       // 2. Initialize Razorpay options
       const options = {
@@ -101,11 +101,11 @@ export default function PaymentPage() {
         currency: currency,
         name: "CrownWing",
         description: "Premium Furniture Order",
-        order_id: razorpayOrderId,
+        order_id: orderId,
         handler: async function (response: any) {
           try {
             // 3. Verify Payment
-            const verifyRes = await fetch("/api/orders/verify", {
+            const verifyRes = await fetch("/api/razorpay/verify-payment", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(response),

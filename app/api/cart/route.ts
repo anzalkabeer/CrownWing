@@ -2,6 +2,8 @@ import { NextResponse, NextRequest } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { verifyToken } from '@/lib/auth';
 import { AppError, handleApiError } from '@/lib/api-error';
+import { collectionItems } from '@/lib/data';
+import { assertTrustedOrigin } from '@/lib/security';
 
 // Helper to get or create a session/cart ID
 function getCartSession(request: NextRequest): { sessionId: string; isNew: boolean } {
@@ -62,6 +64,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    assertTrustedOrigin(request);
+
     const body = await request.json();
     const { product, quantity = 1 } = body;
 
@@ -71,8 +75,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate quantity
-    if (typeof quantity !== 'number' || !Number.isInteger(quantity) || quantity < 1) {
-      throw new AppError('Quantity must be a positive integer.', 400);
+    if (typeof quantity !== 'number' || !Number.isInteger(quantity) || quantity < 1 || quantity > 20) {
+      throw new AppError('Quantity must be an integer between 1 and 20.', 400);
+    }
+
+    const productId = Number(product.id);
+    if (!Number.isInteger(productId) || productId <= 0) {
+      throw new AppError('Product id must be a valid integer.', 400);
+    }
+
+    const trustedProduct = collectionItems.find((p) => p.id === productId);
+    if (!trustedProduct) {
+      throw new AppError('Product not found.', 404);
     }
 
     const { sessionId, isNew } = getCartSession(request);
@@ -102,12 +116,22 @@ export async function POST(request: NextRequest) {
     let items = targetCart.items || [];
     
     // Check if item exists in cart
-    const existingItemIndex = items.findIndex((item: any) => item.id === product.id);
+    const existingItemIndex = items.findIndex((item: any) => item.id === trustedProduct.id);
     
     if (existingItemIndex > -1) {
-      items[existingItemIndex].quantity += quantity;
+      const nextQuantity = Number(items[existingItemIndex].quantity || 0) + quantity;
+      if (nextQuantity > 20) {
+        throw new AppError('Maximum quantity per item is 20.', 400);
+      }
+      items[existingItemIndex].quantity = nextQuantity;
     } else {
-      items.push({ ...product, quantity });
+      items.push({
+        id: trustedProduct.id,
+        name: trustedProduct.name,
+        price: trustedProduct.price,
+        image: trustedProduct.image,
+        quantity,
+      });
     }
 
     targetCart.items = items;
@@ -136,6 +160,8 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    assertTrustedOrigin(request);
+
     const url = new URL(request.url);
     const productId = url.searchParams.get('id');
 
@@ -181,6 +207,8 @@ export async function DELETE(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    assertTrustedOrigin(request);
+
     const body = await request.json();
     const { action, cartId, name } = body;
     const { sessionId } = getCartSession(request);

@@ -38,6 +38,12 @@ export async function generateNextUserId(): Promise<string> {
   return `CW-26-${paddedNumber}`;
 }
 
+let indexesReady = false;
+
+export function isIndexesReady() {
+  return indexesReady;
+}
+
 /**
  * Initialize MongoDB collection with unique index for Email.
  * Runs asynchronously. We do NOT exit the process on failure 
@@ -48,8 +54,10 @@ async function ensureIndexes() {
     const db = await getDb();
     await db.collection('users').createIndex({ email: 1 }, { unique: true });
     await db.collection('users').createIndex({ id: 1 }, { unique: true });
+    indexesReady = true;
   } catch (err) {
     console.error("Failed to ensure MongoDB indexes. Check your Atlas IP Whitelist (0.0.0.0/0).", err);
+    indexesReady = false;
   }
 }
 
@@ -97,6 +105,9 @@ export async function getUserById(id: string): Promise<User | null> {
  * Save a new user to MongoDB.
  */
 export async function saveUser(user: User): Promise<void> {
+  if (!isIndexesReady()) {
+    throw new Error('Database not ready. Indexes are still initializing or failed to initialize.');
+  }
   const db = await getDb();
   await db.collection('users').insertOne({
     ...user,
