@@ -9,10 +9,20 @@ import { generateReceiptPDF, PDFOrderData } from '@/lib/pdf/receipt';
 import { generatePackagingSlipPDF } from '@/lib/pdf/packagingSlip';
 import Razorpay from 'razorpay';
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || '',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || '',
-});
+let razorpay: any = null;
+
+function getRazorpay() {
+  if (!razorpay) {
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+      throw new AppError('Server configuration error: missing Razorpay credentials', 500);
+    }
+    razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+  }
+  return razorpay;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -72,7 +82,8 @@ export async function POST(request: NextRequest) {
       throw new AppError('Invalid order amount', 400);
     }
 
-    const payment = await razorpay.payments.fetch(razorpay_payment_id);
+    const rzp = getRazorpay();
+    const payment = await rzp.payments.fetch(razorpay_payment_id);
     if (!payment) {
       throw new AppError('Payment not found', 404);
     }

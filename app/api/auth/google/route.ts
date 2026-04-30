@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { OAuth2Client } from 'google-auth-library';
-import { getUserByEmail, saveUser, User, generateNextUserId } from '@/lib/db';
+import { getUserByEmail, saveUser, User } from '@/lib/db';
 import { signToken, isAdmin } from '@/lib/auth';
 import { handleApiError, AppError } from '@/lib/api-error';
 import crypto from 'crypto';
@@ -37,11 +37,8 @@ export async function POST(request: Request) {
     let user = await getUserByEmail(trimmedEmail);
 
     if (!user) {
-      // Create new user for Google Sign-In
-      const userId = await generateNextUserId();
-      
       const newUser: User = {
-        id: userId,
+
         name: name || email.split('@')[0],
         email: trimmedEmail,
         passwordHash: crypto.randomBytes(32).toString('hex'), 
@@ -50,8 +47,8 @@ export async function POST(request: Request) {
       };
 
       try {
-        await saveUser(newUser);
-        user = newUser;
+        const userId = await saveUser(newUser);
+        user = { ...newUser, id: userId };
       } catch (err: any) {
         if (err.code === 11000) {
           // Race condition occurred; someone else registered this email right now.
@@ -65,14 +62,14 @@ export async function POST(request: Request) {
     }
 
     // Generate our application JWT
-    const token = signToken({ userId: user.id, email: user.email });
+    const token = signToken({ userId: user.id!, email: user.email });
 
     // Return response with HttpOnly cookie
     const response = NextResponse.json(
       { 
         message: 'Google authentication successful',
         user: { 
-          id: user.id, 
+          id: user.id!, 
           name: user.name, 
           email: user.email,
           role: isAdmin(user.email) ? 'admin' : 'user'

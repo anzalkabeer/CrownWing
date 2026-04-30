@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { getUserByEmail, saveUser, User, generateNextUserId } from '@/lib/db';
+import { getUserByEmail, saveUser, User } from '@/lib/db';
 import { signToken } from '@/lib/auth';
 import { validateSignupInput } from '@/lib/validation';
 import { AppError, handleApiError } from '@/lib/api-error';
@@ -29,30 +29,26 @@ export async function POST(request: Request) {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // Generate Special Primary Key (CW-26-XXXX)
-    const userId = await generateNextUserId();
-
-    // Create user object
+    // Create user object without 'id' (let MongoDB generate _id)
     const newUser: User = {
-      id: userId,
       name: trimmedName,
       email: trimmedEmail,
       phone: phone,
       passwordHash,
       createdAt: new Date().toISOString(),
     };
-
-    // Save to database
-    await saveUser(newUser);
+    
+    // Save to database and get generated ID
+    const userId = await saveUser(newUser);
 
     // Generate JWT
-    const token = signToken({ userId: newUser.id, email: newUser.email });
+    const token = signToken({ userId: userId, email: newUser.email });
 
     // Return response with HttpOnly cookie
     const response = NextResponse.json(
       { 
         message: 'User created successfully',
-        user: { id: newUser.id, name: newUser.name, email: newUser.email, phone: newUser.phone }
+        user: { id: userId, name: newUser.name, email: newUser.email, phone: newUser.phone }
       },
       { status: 201 }
     );

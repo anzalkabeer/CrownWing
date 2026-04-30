@@ -35,14 +35,14 @@ export async function POST(request: Request) {
     }
 
     // Generate JWT
-    const token = signToken({ userId: user.id, email: user.email });
+    const token = signToken({ userId: user.id!, email: user.email });
 
     // Return response with HttpOnly cookie
     const response = NextResponse.json(
       { 
         message: 'Login successful',
         user: { 
-          id: user.id, 
+          id: user.id!, 
           name: user.name, 
           email: user.email,
           role: isAdmin(user.email) ? 'admin' : 'user'

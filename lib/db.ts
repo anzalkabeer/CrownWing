@@ -1,7 +1,8 @@
 import { getDb } from './mongodb';
+import { ObjectId } from 'mongodb';
 
 export interface User {
-  id: string;        // The "Special Primary Key"
+  id?: string;       // Maps to MongoDB _id string
   email: string;     // Unique Candidate Key
   passwordHash: string;
   name: string;
@@ -10,33 +11,8 @@ export interface User {
   createdAt: string;
 }
 
-/**
- * Generate the "Special Primary Key" in format CW-26-XXXX.
- * Uses a counters collection in MongoDB to ensure auto-incrementing unique IDs.
- */
-export async function generateNextUserId(): Promise<string> {
-  const db = await getDb();
-  const counter = await db.collection<any>('counters').findOneAndUpdate(
-    { _id: 'userId' },
-    { $inc: { seq: 1 } },
-    { upsert: true, returnDocument: 'after' }
-  );
 
-  if (!counter || typeof counter.seq !== 'number') {
-    throw new Error('Failed to generate unique user ID: counter is null or undefined.');
-  }
 
-  const sequenceNumber = counter.seq;
-  
-  if (sequenceNumber > 9999) {
-    throw new Error('Maximum user ID limit exceeded (9999).');
-  }
-
-  // Pad with zeros to 4 digits (e.g., 0001)
-  const paddedNumber = sequenceNumber.toString().padStart(4, '0');
-  
-  return `CW-26-${paddedNumber}`;
-}
 
 let indexesReady = false;
 
@@ -53,7 +29,6 @@ async function ensureIndexes() {
   try {
     const db = await getDb();
     await db.collection('users').createIndex({ email: 1 }, { unique: true });
-    await db.collection('users').createIndex({ id: 1 }, { unique: true });
     indexesReady = true;
   } catch (err) {
     console.error("Failed to ensure MongoDB indexes. Check your Atlas IP Whitelist (0.0.0.0/0).", err);
@@ -74,7 +49,7 @@ export async function getUserByEmail(email: string): Promise<User | null> {
   if (!user) return null;
 
   return {
-    id: user.id,
+    id: user._id.toString(),
     email: user.email,
     passwordHash: user.passwordHash,
     name: user.name,
@@ -88,11 +63,20 @@ export async function getUserByEmail(email: string): Promise<User | null> {
  */
 export async function getUserById(id: string): Promise<User | null> {
   const db = await getDb();
-  const user = await db.collection('users').findOne({ id });
+  // Using native _id for lookups
+  let query: any;
+  try {
+    query = { _id: new ObjectId(id) };
+  } catch (e) {
+    // If id is not a valid ObjectId (maybe old data), fallback or return null
+    return null;
+  }
+
+  const user = await db.collection('users').findOne(query);
   if (!user) return null;
 
   return {
-    id: user.id,
+    id: user._id.toString(),
     email: user.email,
     passwordHash: user.passwordHash,
     name: user.name,
@@ -104,13 +88,18 @@ export async function getUserById(id: string): Promise<User | null> {
 /**
  * Save a new user to MongoDB.
  */
-export async function saveUser(user: User): Promise<void> {
+export async function saveUser(user: User): Promise<string> {
   if (!isIndexesReady()) {
     throw new Error('Database not ready. Indexes are still initializing or failed to initialize.');
   }
   const db = await getDb();
-  await db.collection('users').insertOne({
-    ...user,
+  
+  // We remove 'id' if it exists and let MongoDB handle _id
+  const { id, ...userData } = user;
+  const result = await db.collection('users').insertOne({
+    ...userData,
     updatedAt: new Date().toISOString()
   });
+
+  return result.insertedId.toString();
 }
