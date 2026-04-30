@@ -185,26 +185,21 @@ export default function AuthPage() {
           <div className="flex-1 h-px bg-outline-variant/50"></div>
         </div>
 
-        {/* Social Buttons */}
-        <div className="flex gap-4 items-center justify-center">
-          {clientId ? (
-            <div className="flex-1 flex justify-center">
-              <GoogleOAuthProvider clientId={clientId}>
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={() => setError("Google Sign-In failed")}
-                  theme="filled_black"
-                  shape="rectangular"
-                  text="continue_with"
-                />
-              </GoogleOAuthProvider>
-            </div>
-          ) : null}
-          <button type="button" className="flex-1 bg-[#121a35] border border-outline-variant hover:border-primary-container/50 rounded-DEFAULT py-[9px] flex items-center justify-center gap-2 transition-all">
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>ios</span>
-            <span className="font-label-sm text-label-sm text-on-surface">APPLE</span>
-          </button>
-        </div>
+        {/* Social Login */}
+        {clientId && (
+          <div className="flex justify-center">
+            <GoogleOAuthProvider clientId={clientId}>
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => setError("Google Sign-In failed")}
+                theme="filled_black"
+                shape="rectangular"
+                text="continue_with"
+                width="400"
+              />
+            </GoogleOAuthProvider>
+          </div>
+        )}
 
       </div>
     </div>
