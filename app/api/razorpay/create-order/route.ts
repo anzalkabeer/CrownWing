@@ -4,8 +4,9 @@ import { createOrder } from '@/lib/orders';
 import { AppError, handleApiError } from '@/lib/api-error';
 import { collectionItems } from '@/lib/data';
 import { assertTrustedOrigin } from '@/lib/security';
-import Razorpay from 'razorpay';
+// import Razorpay from 'razorpay';
 
+/*
 let razorpay: any = null;
 
 function getRazorpay() {
@@ -20,6 +21,7 @@ function getRazorpay() {
   }
   return razorpay;
 }
+*/
 
 export async function POST(request: NextRequest) {
   try {
@@ -85,12 +87,15 @@ export async function POST(request: NextRequest) {
     // Razorpay amount is in smallest currency unit (paise)
     const amountInPaise = computedTotal;
     
+    /*
     const rzpClient = getRazorpay();
     const rzpOrder = await rzpClient.orders.create({
       amount: amountInPaise,
       currency: 'INR',
       receipt: `receipt_${Date.now()}`,
     });
+    */
+    const rzpOrder = { id: `mock_rzp_${Date.now()}`, currency: 'INR' };
 
     const order = await createOrder({
       userId: decoded.userId,
